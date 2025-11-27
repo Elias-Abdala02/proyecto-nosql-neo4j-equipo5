@@ -36,7 +36,7 @@ La base de datos NoSQL asignada al equipo es **Neo4J**.
 
 - **Nombre del dataset:** Shopping Behaviour and Product Ranking Dataset  
 - **Fuente:** Kaggle  
-- **Enlace:** <https://www.kaggle.com/datasets/XXXXXXXX>  <!-- Reemplazar con la URL real -->
+- **Enlace:** <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dateset>
 - **Archivo principal:** `data/shopping_behavior.csv`  
 
 ### 2.1. ¿En qué consiste?
