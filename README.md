@@ -2,18 +2,18 @@
 
 ## Análisis de comportamiento de compra (Shopping Behaviour and Product Ranking Dataset)
 
-**Institución:** <Nombre de la institución>  
+**Institución:** Universidad Autónoma de Yucatán  
 **Asignatura:** Modelos de Datos LCC  
 **Profesor:** M. en C. Luis R. Basto Díaz  
 **Periodo:** <Agosto–Diciembre 2025>  
-**Equipo:** Número de equipo  
+**Equipo:** 5  
 **Integrantes:**
 
 - Abdala Aguiar Elias Abud – 22216297  
 - Nombre 2 – Matrícula  
 - Nombre 3 – Matrícula
 
-**Fecha de entrega:** DD/MM/AAAA
+**Fecha de entrega:** 02/11/2025
 
 ---
 
