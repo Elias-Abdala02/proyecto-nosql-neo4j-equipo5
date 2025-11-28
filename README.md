@@ -5,7 +5,7 @@
 **Institución:** Universidad Autónoma de Yucatán  
 **Asignatura:** Modelos de Datos LCC  
 **Profesor:** M. en C. Luis R. Basto Díaz  
-**Periodo:** <Agosto–Diciembre 2025>  
+**Periodo:** Agosto–Diciembre 2025
 **Equipo:** 5  
 **Integrantes:**
 
@@ -13,7 +13,7 @@
 - Nombre 2 – Matrícula  
 - Nombre 3 – Matrícula
 
-**Fecha de entrega:** 02/11/2025
+**Fecha de entrega:** 02/12/2025
 
 ---
 
