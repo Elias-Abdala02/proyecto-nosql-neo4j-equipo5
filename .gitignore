@@ -23,3 +23,15 @@ Thumbs.db
 
 # Logs
 *.log
+# Neo4j Docker runtime
+neo4j-docker/data/*
+neo4j-docker/logs/*
+neo4j-docker/import/*
+neo4j-docker/plugins/*
+neo4j-docker/conf/dbms.auth
+# Allow docker placeholders
+!neo4j-docker/data/.gitkeep
+!neo4j-docker/logs/.gitkeep
+!neo4j-docker/import/.gitkeep
+!neo4j-docker/plugins/.gitkeep
+!neo4j-docker/conf/.gitkeep
