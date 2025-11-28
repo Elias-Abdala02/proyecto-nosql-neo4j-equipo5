@@ -426,17 +426,6 @@ En este proyecto se definieron **5 sentencias para cada operación CRUD**, total
 
    *Elimina clientes sin suscripción y sin historial de compras.*
 
-### 7.5. Evidencia visual en Neo4J Browser
-
-- ![Cliente creado](docs/Cliente%20nuevo.jpg)  
-  *Resultado de crear un nuevo nodo de cliente en el grafo.*
-- ![Consulta clientes > 50](docs/ConsultaMayorA50.jpg)  
-  *Salida de la consulta de clientes mayores de 50 años (operación READ).*
-- ![Actualización de edad](docs/ActualizarEdad.jpg)  
-  *Ejemplo de operación UPDATE modificando la edad de un cliente.*
-- ![Cliente eliminado](docs/Cliente9999eliminado.jpg)  
-  *Evidencia de la operación DELETE eliminando al cliente 9999.*
-
 ---
 
 **Nota:** Todas estas sentencias están completamente documentadas en el archivo `neo4j/crud.cypher` con ejemplos adicionales y consultas útiles.
@@ -446,24 +435,47 @@ En este proyecto se definieron **5 sentencias para cada operación CRUD**, total
 ## 8. Estructura del repositorio
 
 ```text
-proyecto-nosql-neo4j-equipoN/
+proyecto-nosql-neo4j-equipo5/
 ├── data/
 │   └── shopping_behavior.csv
+├── docs/
+│   ├── diccionario_datos.md
+│   ├── modelo_grafo.drawio
+│   ├── modelo_grafo.png
+│   ├── subgrafo_datos_reales.png
+│   ├── Cliente nuevo.jpg
+│   ├── ConsultaMayorA50.jpg
+│   ├── ActualizarEdad.jpg
+│   └── Cliente9999eliminado.jpg
 ├── neo4j/
 │   ├── constraints.cypher
 │   ├── import_nodes.cypher
 │   ├── import_relationships.cypher
 │   └── crud.cypher
-├── docs/
-│   ├── diccionario_datos.md
-│   ├── modelo_grafo.drawio
-│   └── modelo_grafo.png
+├── neo4j-docker/
+│   ├── docker-compose.yml
+│   ├── README.md
+│   ├── conf/
+│   ├── data/
+│   ├── import/
+│   ├── logs/
+│   └── plugins/
 └── README.md
 ```
 
 ---
 
-## 9. Referencias
+## 9. Conclusiones
+
+- El modelo de grafos en Neo4J permitió integrar clientes, productos y categorías de forma natural, facilitando consultas analíticas (top productos, clientes por edad, métodos de pago).
+- El proceso de importación con `LOAD CSV` más constraints e índices asegura integridad (unicidad de clientes/productos) y buen rendimiento en las consultas CRUD.
+- Las evidencias en Neo4J Browser muestran que las operaciones CRUD funcionan y el dataset se representa correctamente en el grafo.
+- El contenedor Docker estandariza la puesta en marcha: cualquier integrante puede recrear el entorno y cargar los datos con los scripts incluidos.
+- El dataset de Kaggle resulta adecuado para grafos al capturar relaciones de compra y pertenencia; se pueden extender análisis a recomendaciones y segmentación.
+
+---
+
+## 10. Referencias
 
 - **Kaggle – Shopping Behaviour and Product Ranking Dataset:**  
   <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dateset>
