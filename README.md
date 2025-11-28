@@ -186,7 +186,7 @@ Los scripts Cypher correspondientes se encuentran en la carpeta `neo4j/`:
 - `import_nodes.cypher`
 - `import_relationships.cypher`
 
-(En la siguiente etapa del proyecto se completará el contenido de estos archivos.)
+Estos archivos ya están completos y listos para ejecutarse tanto desde Neo4J Browser (`:source`) como dentro del contenedor Docker (ver `neo4j-docker/README.md` para los comandos con `docker compose exec cypher-shell`).
 
 ---
 
