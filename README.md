@@ -426,6 +426,17 @@ En este proyecto se definieron **5 sentencias para cada operación CRUD**, total
 
    *Elimina clientes sin suscripción y sin historial de compras.*
 
+### 7.5. Evidencia visual en Neo4J Browser
+
+- ![Cliente creado](docs/Cliente%20nuevo.jpg)  
+  *Resultado de crear un nuevo nodo de cliente en el grafo.*
+- ![Consulta clientes > 50](docs/ConsultaMayorA50.jpg)  
+  *Salida de la consulta de clientes mayores de 50 años (operación READ).*
+- ![Actualización de edad](docs/ActualizarEdad.jpg)  
+  *Ejemplo de operación UPDATE modificando la edad de un cliente.*
+- ![Cliente eliminado](docs/Cliente9999eliminado.jpg)  
+  *Evidencia de la operación DELETE eliminando al cliente 9999.*
+
 ---
 
 **Nota:** Todas estas sentencias están completamente documentadas en el archivo `neo4j/crud.cypher` con ejemplos adicionales y consultas útiles.
