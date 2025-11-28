@@ -136,6 +136,13 @@ Este modelo permite analizar:
 - Qué categorías son más populares.
 - Comportamiento de compra por temporada, ubicación, género, etc.
 
+### 4.3. Visualización del modelo de grafo
+
+![Modelo de grafo en Neo4J](docs/modelo_grafo.png)  
+*Visualización del esquema de nodos y relaciones implementado en Neo4J para el dataset de comportamiento de compra.*
+
+- Archivo editable del diagrama: [`docs/modelo_grafo.drawio`](docs/modelo_grafo.drawio)
+
 ---
 
 ## 5. Herramientas utilizadas
