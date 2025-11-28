@@ -143,6 +143,11 @@ Este modelo permite analizar:
 
 - Archivo editable del diagrama: [`docs/modelo_grafo.drawio`](docs/modelo_grafo.drawio)
 
+### 4.4. Ejemplo de subgrafo con datos reales
+
+![Subgrafo de ejemplo](docs/subgrafo_datos_reales.png)  
+*Captura de un subgrafo real tras la importación, mostrando clientes, productos y categorías conectados por compras.*
+
 ---
 
 ## 5. Herramientas utilizadas
