@@ -1,0 +1,7 @@
+\babel@toc {spanish}{}\relax 
+\beamer@sectionintoc {1}{Dataset}{3}{0}{1}
+\beamer@sectionintoc {2}{Modelado en Neo4J}{5}{0}{2}
+\beamer@sectionintoc {3}{Importación y herramientas}{7}{0}{3}
+\beamer@sectionintoc {4}{CRUD y evidencias}{8}{0}{4}
+\beamer@sectionintoc {5}{Reproducibilidad}{10}{0}{5}
+\beamer@sectionintoc {6}{Conclusiones}{11}{0}{6}

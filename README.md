@@ -443,7 +443,7 @@ proyecto-nosql-neo4j-equipo5/
 │   ├── modelo_grafo.drawio
 │   ├── modelo_grafo.png
 │   ├── subgrafo_datos_reales.png
-│   ├── Cliente nuevo.jpg
+│   ├── Cliente_nuevo.jpg
 │   ├── ConsultaMayorA50.jpg
 │   ├── ActualizarEdad.jpg
 │   └── Cliente9999eliminado.jpg

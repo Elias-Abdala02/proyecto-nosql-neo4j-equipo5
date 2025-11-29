@@ -1,0 +1,147 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+
+% Si quieres, puedes usar fontspec con XeLaTeX:
+% \usepackage{fontspec}
+% \setsansfont{Latin Modern Sans}
+
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+
+\title{Proyecto NoSQL -- Neo4J\\Análisis de comportamiento de compra}
+\author{Equipo 5}
+\date{Agosto--Diciembre 2025}
+\institute{Universidad Autónoma de Yucatán\\Modelos de Datos LCC}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+  \begin{center}
+    \small Profesor: M. en C. Luis R. Basto Díaz
+  \end{center}
+\end{frame}
+
+\begin{frame}{Agenda}
+  \tableofcontents
+\end{frame}
+
+\section{Dataset}
+
+\begin{frame}{Fuente y descripción}
+  \begin{itemize}
+    \item Kaggle: \textit{Shopping Behaviour and Product Ranking Dataset}.
+    \item 3{,}900 transacciones con datos de clientes, productos, categorías, monto y rating.
+    \item Archivo principal: \texttt{data/shopping\_behavior.csv}.
+    \item Adecuado para grafos: conecta clientes, productos y categorías con relaciones de compra.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Diccionario de datos (resumen)}
+  \begin{itemize}
+    \item \textbf{Customer}: \texttt{customerId}, edad, género, ubicación, suscripción, compras previas, frecuencia.
+    \item \textbf{Product}: \texttt{productId}, nombre, talla, color, temporada, rating promedio.
+    \item \textbf{Category}: nombre de categoría.
+    \item \textbf{BOUGHT} (relación): monto, descuento, rating, método de pago, fecha de importación.
+  \end{itemize}
+\end{frame}
+
+\section{Modelado en Neo4J}
+
+\begin{frame}{Esquema de grafo}
+  \begin{itemize}
+    \item Nodos: \textbf{Customer}, \textbf{Product}, \textbf{Category}.
+    \item Relaciones: \textbf{BOUGHT} (cliente $\rightarrow$ producto), \textbf{BELONGS\_TO} (producto $\rightarrow$ categoría).
+    \item Restricciones de unicidad: \texttt{customerId}, \texttt{productId}, \texttt{Category.name}.
+  \end{itemize}
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{../docs/modelo_grafo.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Subgrafo con datos reales}
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{../docs/subgrafo_datos_reales.png}
+  \end{center}
+  \begin{itemize}
+    \item Ejemplo de clientes, productos y categorías conectados tras la importación.
+  \end{itemize}
+\end{frame}
+
+\section{Importación y herramientas}
+
+\begin{frame}{Proceso de importación}
+  \begin{enumerate}
+    \item Copia del CSV a la carpeta \texttt{import} de Neo4J.
+    \item Ejecución de \texttt{constraints.cypher}.
+    \item Creación de nodos con \texttt{import\_nodes.cypher}.
+    \item Creación de relaciones con \texttt{import\_relationships.cypher}.
+  \end{enumerate}
+  \vspace{0.5em}
+  \textbf{Herramientas:} Neo4J Browser / Desktop, Cypher, Docker Compose, GitHub.
+\end{frame}
+
+\section{CRUD y evidencias}
+
+\begin{frame}{Operaciones CRUD (5 por operación)}
+  \begin{itemize}
+    \item \textbf{CREATE}: clientes, productos, categorías, relaciones de compra.
+    \item \textbf{READ}: top productos, clientes por categoría, promedio por método de pago, etc.
+    \item \textbf{UPDATE}: actualización de edad, suscripción, ratings promedios, incrementos de compras.
+    \item \textbf{DELETE}: eliminación de clientes, relaciones de compra bajas, productos sin compras.
+  \end{itemize}
+  \begin{center}
+    \includegraphics[width=0.75\linewidth]{../docs/ConsultaMayorA50.jpg}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Evidencia de operaciones}
+  \begin{columns}
+    \column{0.48\textwidth}
+      \includegraphics[width=\linewidth]{../docs/Cliente_nuevo.jpg}
+      \vspace{0.3em}
+      \includegraphics[width=\linewidth]{../docs/ActualizarEdad.jpg}
+    \column{0.48\textwidth}
+      \includegraphics[width=\linewidth]{../docs/Cliente9999eliminado.jpg}
+  \end{columns}
+\end{frame}
+
+\section{Reproducibilidad}
+
+\begin{frame}{Ejecución con Docker}
+  \begin{footnotesize}
+  \begin{itemize}
+    \item Carpeta \texttt{neo4j-docker/} con \texttt{docker-compose.yml}.
+    \item Volúmenes: \texttt{data}, \texttt{logs}, \texttt{import}, \texttt{plugins}, \texttt{conf}.
+    \item Montaje de \texttt{neo4j/} como \texttt{/scripts} para ejecutar los .cypher directamente.
+    \item Comandos principales:
+      \begin{itemize}
+        \item \texttt{docker compose up -d}
+        \item \texttt{cat neo4j/constraints.cypher | docker compose exec -T neo4j cypher-shell -u neo4j -p test123}
+      \end{itemize}
+  \end{itemize}
+  \end{footnotesize}
+\end{frame}
+
+\section{Conclusiones}
+
+\begin{frame}{Conclusiones}
+  \begin{itemize}
+    \item El modelo de grafos captura de forma clara las relaciones cliente--producto--categoría y soporta consultas analíticas.
+    \item Constraints e índices garantizan integridad y buen rendimiento en lecturas/actualizaciones.
+    \item Las evidencias muestran que las operaciones CRUD funcionan con el dataset real.
+    \item El setup Docker asegura reproducibilidad para cualquier integrante del equipo.
+    \item El dataset es una buena base para extensiones: recomendaciones, segmentación y análisis estacional.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \centering
+  \Huge ¡Gracias!
+\end{frame}
+
+\end{document}
