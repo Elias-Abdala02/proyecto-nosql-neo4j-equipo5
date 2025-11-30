@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from neo4j import GraphDatabase, basic_auth
 from pydantic import BaseModel, Field
@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "test123")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "test1234")
 
 
 def get_driver():
@@ -320,7 +320,7 @@ def read_premium_customers():
 
 # ---------- UPDATE ----------
 @app.patch("/update/customer-age/{customerId}", summary="U1: Actualizar edad de un cliente")
-def update_customer_age(customerId: int, age: int = Field(..., gt=0)):
+def update_customer_age(customerId: int, age: int = Query(..., gt=0, description="Nueva edad")):
     query = """
     MATCH (c:Customer {customerId: $customerId})
     SET c.age = $age

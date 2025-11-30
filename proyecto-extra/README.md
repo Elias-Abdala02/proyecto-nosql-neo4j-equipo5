@@ -27,7 +27,7 @@ docker compose up -d
 ```
 
 Servicios:
-- Neo4J en `bolt://localhost:7687` (HTTP 7474), usuario `neo4j`, password `test123`.
+- Neo4J en `bolt://localhost:7687` (HTTP 7474), usuario `neo4j`, password `test1234`.
 - FastAPI en `http://localhost:8000/docs` (Swagger).
 
 ## Sembrar datos (seed)
