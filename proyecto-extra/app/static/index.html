@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Proyecto Extra - Neo4J CRUD</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.5; }
+    h1, h2 { margin-bottom: 0.2em; }
+    .card { border: 1px solid #ddd; padding: 12px; margin-bottom: 12px; border-radius: 6px; }
+    label { display: block; margin-top: 6px; }
+    input, select, button { margin-top: 4px; padding: 6px; }
+    pre { background: #f7f7f7; padding: 10px; max-height: 280px; overflow: auto; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row .card { flex: 1 1 320px; }
+  </style>
+</head>
+<body>
+  <h1>Proyecto Extra - Neo4J CRUD</h1>
+  <p>UI mínima para probar las operaciones CRUD sobre Neo4J. Usa los mismos endpoints expuestos por la API FastAPI.</p>
+
+  <div class="row">
+    <div class="card">
+      <h2>Sembrar datos (seed)</h2>
+      <button onclick="seed()">Ejecutar /seed</button>
+    </div>
+    <div class="card">
+      <h2>Healthcheck</h2>
+      <button onclick="health()">Ping</button>
+    </div>
+    <div class="card">
+      <h2>Top productos</h2>
+      <label>Límite</label>
+      <input type="number" id="limit" value="5" min="1" max="20">
+      <button onclick="topProducts()">Consultar</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h2>Crear cliente</h2>
+      <label>ID</label><input id="c-id" type="number" value="9999">
+      <label>Edad</label><input id="c-age" type="number" value="28">
+      <label>Género</label><input id="c-gender" value="Female">
+      <label>Ubicación</label><input id="c-location" value="California">
+      <label>Suscripción</label><input id="c-sub" value="Yes">
+      <label>Compras previas</label><input id="c-prev" type="number" value="5">
+      <label>Frecuencia</label><input id="c-freq" value="Monthly">
+      <button onclick="createCustomer()">Crear / MERGE</button>
+    </div>
+    <div class="card">
+      <h2>Actualizar edad</h2>
+      <label>ID Cliente</label><input id="u-id" type="number" value="9999">
+      <label>Nueva edad</label><input id="u-age" type="number" value="30">
+      <button onclick="updateAge()">Actualizar</button>
+    </div>
+    <div class="card">
+      <h2>Eliminar cliente</h2>
+      <label>ID Cliente</label><input id="d-id" type="number" value="9999">
+      <button onclick="deleteCustomer()">Eliminar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Salida</h2>
+    <pre id="output">Listo para usar.</pre>
+  </div>
+
+  <script>
+    const out = document.getElementById('output');
+    const api = (path) => `http://localhost:8000${path}`;
+
+    async function seed() {
+      await call('POST', '/seed');
+    }
+    async function health() { await call('GET', '/health'); }
+    async function topProducts() {
+      const limit = document.getElementById('limit').value || 5;
+      await call('GET', `/read/top-products?limit=${limit}`);
+    }
+    async function createCustomer() {
+      const payload = {
+        customerId: Number(document.getElementById('c-id').value),
+        age: Number(document.getElementById('c-age').value),
+        gender: document.getElementById('c-gender').value,
+        location: document.getElementById('c-location').value,
+        subscriptionStatus: document.getElementById('c-sub').value,
+        previousPurchases: Number(document.getElementById('c-prev').value),
+        frequency: document.getElementById('c-freq').value
+      };
+      await call('POST', '/customers', payload);
+    }
+    async function updateAge() {
+      const id = document.getElementById('u-id').value;
+      const age = document.getElementById('u-age').value;
+      await call('PATCH', `/update/customer-age/${id}?age=${age}`);
+    }
+    async function deleteCustomer() {
+      const id = document.getElementById('d-id').value;
+      await call('DELETE', `/delete/customer/${id}`);
+    }
+
+    async function call(method, path, body) {
+      try {
+        const res = await fetch(api(path), {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: body ? JSON.stringify(body) : null
+        });
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        out.textContent = `Error: ${err}`;
+      }
+    }
+  </script>
+</body>
+</html>

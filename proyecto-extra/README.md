@@ -38,6 +38,12 @@ Una vez levantado, ejecutar el endpoint de seed para crear constraints e importa
 POST http://localhost:8000/seed
 ```
 
+## UI mínima
+
+- Visita `http://localhost:8000/` para usar la UI básica en HTML/JS.
+- Incluye botones para `seed`, healthcheck, top de productos y formularios simples para crear/actualizar/eliminar clientes.
+- Swagger sigue disponible en `http://localhost:8000/docs`.
+
 ## Endpoints principales (CRUD)
 
 - CREATE:
@@ -50,6 +56,20 @@ POST http://localhost:8000/seed
   - `DELETE /delete/customer/{customerId}`, `DELETE /delete/purchases-low-rating`, `DELETE /delete/products-no-purchases`, `DELETE /delete/product-category/{name}`, `DELETE /delete/inactive-customers`
 
 Healthcheck: `GET /health`
+
+## Operaciones que realiza la aplicación
+
+- Crea y asegura clientes, categorías y productos; registra relaciones de compra.
+- Consultas analíticas: clientes >50, top productos, clientes por categoría, resumen por método de pago, clientes premium.
+- Actualizaciones: edad, suscripción por ubicación, rating promedio, incremento de compras previas, propiedades de producto.
+- Eliminaciones: clientes (con relaciones), compras con rating bajo, productos sin compras, relaciones producto-categoría, clientes inactivos.
+
+## Lenguaje y herramientas utilizadas
+
+- Backend: FastAPI (Python 3.11), Uvicorn, neo4j-driver.
+- Base de datos: Neo4J 5.15 (contenedor Docker).
+- Contenedores: Docker Compose para orquestar app + Neo4J.
+- Dataset: `data/shopping_behavior.csv` montado en `/import` y cargado con `LOAD CSV`.
 
 ## Notas
 

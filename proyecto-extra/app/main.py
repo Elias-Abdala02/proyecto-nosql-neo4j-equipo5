@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from neo4j import GraphDatabase, basic_auth
 from pydantic import BaseModel, Field
 
@@ -22,6 +24,16 @@ app = FastAPI(
     description="API FastAPI que expone las operaciones CRUD definidas para el proyecto Neo4J.",
     version="1.0.0",
 )
+
+static_dir = Path(__file__).resolve().parent / "static"
+
+# ---------- UI mínima ----------
+@app.get("/", include_in_schema=False)
+def home():
+    index_path = static_dir / "index.html"
+    if not index_path.exists():
+        raise HTTPException(status_code=404, detail="UI no encontrada")
+    return FileResponse(index_path)
 
 
 # ---------- Modelos de entrada ----------

@@ -485,3 +485,18 @@ proyecto-nosql-neo4j-equipo5/
 
 - **Cypher Query Language:**  
   <https://neo4j.com/developer/cypher/>
+
+---
+
+## 10. Proyecto Extra (aplicación web)
+
+- Carpeta: `proyecto-extra/`
+- Stack: FastAPI (Python) + Neo4J en Docker.
+- Endpoints CRUD + `/seed` y healthcheck en `http://localhost:8000/docs`.
+- UI mínima disponible en `http://localhost:8000/`.
+- Levantar con:
+  ```bash
+  cd proyecto-extra
+  docker compose up -d
+  # luego POST http://localhost:8000/seed
+  ```
