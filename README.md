@@ -36,7 +36,7 @@ La base de datos NoSQL asignada al equipo es **Neo4J**.
 
 - **Nombre del dataset:** Shopping Behaviour and Product Ranking Dataset  
 - **Fuente:** Kaggle  
-- **Enlace:** <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dateset>
+- **Enlace:** <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dataset>
 - **Archivo principal:** `data/shopping_behavior.csv`  
 
 ### 2.1. ¿En qué consiste?
@@ -478,7 +478,7 @@ proyecto-nosql-neo4j-equipo5/
 ## 10. Referencias
 
 - **Kaggle – Shopping Behaviour and Product Ranking Dataset:**  
-  <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dateset>
+  <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dataset>
 
 - **Neo4J – Documentación oficial:**  
   <https://neo4j.com/docs/>
