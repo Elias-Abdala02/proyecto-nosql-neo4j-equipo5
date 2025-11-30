@@ -10,7 +10,7 @@
 **Integrantes:**
 
 - Abdala Aguiar Elias Abud – 22216297  
-- Nombre 2 – Matrícula  
+- Andrés del Jesús Collí Olán – 23216437  
 - Jorge Enrique Hernandez Ceme - 12004204
 
 **Fecha de entrega:** 02/12/2025
