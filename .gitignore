@@ -35,3 +35,14 @@ neo4j-docker/conf/dbms.auth
 !neo4j-docker/import/.gitkeep
 !neo4j-docker/plugins/.gitkeep
 !neo4j-docker/conf/.gitkeep
+
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.out
+*.toc
+*.snm
+*.xdv

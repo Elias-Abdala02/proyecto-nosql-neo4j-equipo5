@@ -1,18 +1,13 @@
 \documentclass[aspectratio=169]{beamer}
-
 \usepackage[spanish]{babel}
-\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{hyperref}
-\usepackage{booktabs}
-
-% Si quieres, puedes usar fontspec con XeLaTeX:
-% \usepackage{fontspec}
-% \setsansfont{Latin Modern Sans}
 
 \usetheme{Madrid}
 \usecolortheme{dolphin}
 
-\title{Proyecto NoSQL -- Neo4J\\Análisis de comportamiento de compra}
+\title{Proyecto Extra\\Aplicación Web con FastAPI y Neo4J}
 \author{Equipo 5}
 \date{Agosto--Diciembre 2025}
 \institute{Universidad Autónoma de Yucatán\\Modelos de Datos LCC}
@@ -30,112 +25,109 @@
   \tableofcontents
 \end{frame}
 
-\section{Dataset}
+\section{Objetivo}
 
-\begin{frame}{Fuente y descripción}
+\begin{frame}{Meta del Proyecto Extra}
   \begin{itemize}
-    \item Kaggle: \textit{Shopping Behaviour and Product Ranking Dataset}.
-    \item 3{,}900 transacciones con datos de clientes, productos, categorías, monto y rating.
-    \item Archivo principal: \texttt{data/shopping\_behavior.csv}.
-    \item Adecuado para grafos: conecta clientes, productos y categorías con relaciones de compra.
+    \item Exponer las operaciones CRUD y el modelo de grafos en una aplicación web simple.
+    \item Levantar API y Neo4J con Docker Compose para asegurar reproducibilidad.
+    \item Ofrecer una UI ligera que permita: seed de datos, CRUD rápido y visualización interactiva del grafo.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Diccionario de datos (resumen)}
+\section{Arquitectura}
+
+\begin{frame}{Componentes principales}
   \begin{itemize}
-    \item \textbf{Customer}: \texttt{customerId}, edad, género, ubicación, suscripción, compras previas, frecuencia.
-    \item \textbf{Product}: \texttt{productId}, nombre, talla, color, temporada, rating promedio.
-    \item \textbf{Category}: nombre de categoría.
-    \item \textbf{BOUGHT} (relación): monto, descuento, rating, método de pago, fecha de importación.
+    \item \textbf{docker-compose.yml} con dos servicios:
+    \begin{itemize}
+      \item \textbf{neo4j} (v5.15): monta \texttt{neo4j-data/} y el CSV en \texttt{/import/shopping\_behavior.csv}. Credenciales \texttt{neo4j/test1234}.
+      \item \textbf{app} (FastAPI): cliente oficial de Neo4J, expuesta en \texttt{http://localhost:8000}.
+    \end{itemize}
+    \item Red interna: \texttt{proyecto-extra-net}.
   \end{itemize}
 \end{frame}
 
-\section{Modelado en Neo4J}
-
-\begin{frame}{Esquema de grafo}
+\begin{frame}{Estructura del repositorio}
   \begin{itemize}
-    \item Nodos: \textbf{Customer}, \textbf{Product}, \textbf{Category}.
-    \item Relaciones: \textbf{BOUGHT} (cliente $\rightarrow$ producto), \textbf{BELONGS\_TO} (producto $\rightarrow$ categoría).
-    \item Restricciones de unicidad: \texttt{customerId}, \texttt{productId}, \texttt{Category.name}.
-  \end{itemize}
-  \begin{center}
-    \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{../docs/modelo_grafo.png}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Subgrafo con datos reales}
-  \begin{center}
-    \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{../docs/subgrafo_datos_reales.png}
-  \end{center}
-  \begin{itemize}
-    \item Ejemplo de clientes, productos y categorías conectados tras la importación.
+    \item \texttt{proyecto-extra/docker-compose.yml}: orquesta API + Neo4J.
+    \item \texttt{proyecto-extra/app/}:
+    \begin{itemize}
+      \item \texttt{main.py}: endpoints \textbf{/seed}, CRUD, grafo, health.
+      \item \texttt{static/index.html}: UI HTML/JS con vis-network.
+      \item Dockerfile y requirements para construir la imagen de la API.
+    \end{itemize}
+    \item \texttt{neo4j/}: scripts Cypher originales (montados en el contenedor).
   \end{itemize}
 \end{frame}
 
-\section{Importación y herramientas}
+\section{Dataset y carga}
 
-\begin{frame}{Proceso de importación}
+\begin{frame}{Dataset y seed}
+  \begin{itemize}
+    \item Dataset: \texttt{data/shopping\_behavior.csv} (3{,}900 transacciones).
+    \item Endpoint \textbf{/seed}:
+    \begin{itemize}
+      \item Crea constraints (Customer, Product, Category).
+      \item Carga nodos y relaciones con \texttt{LOAD CSV}.
+    \end{itemize}
+    \item Acceso Neo4J: \texttt{bolt://localhost:7687}, usuario \texttt{neo4j}, password \texttt{test1234}.
+  \end{itemize}
+\end{frame}
+
+\section{API}
+
+\begin{frame}{Endpoints CRUD}
+  \begin{itemize}
+    \item CREATE: \texttt{/customers}, \texttt{/categories}, \texttt{/products}, \texttt{/purchases}, \texttt{/products/with-category}.
+    \item READ: clientes >50, top productos, clientes por categoría, resumen por método de pago, clientes premium.
+    \item UPDATE: edad, suscripción por ubicación, rating promedio, incremento de compras previas, actualización de producto.
+    \item DELETE: cliente + relaciones, compras con rating bajo, productos sin compras, relación producto-categoría, clientes inactivos.
+    \item Utilidades: \texttt{/seed}, \texttt{/health}, Swagger en \texttt{/docs}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Endpoints de grafo}
+  \begin{itemize}
+    \item \texttt{/graph/options}: devuelve valores disponibles para categoría, producto o cliente (pobla los selects de la UI).
+    \item \texttt{/graph/sample}: genera un subgrafo centrado en el nodo elegido, con profundidad y límite configurables; devuelve nodos y relaciones para pintar en la UI.
+  \end{itemize}
+\end{frame}
+
+\section{UI Web}
+
+\begin{frame}{UI (index.html)}
+  \begin{itemize}
+    \item Botones rápidos: \textbf{seed}, \textbf{health}, \textbf{top productos}.
+    \item Formularios CRUD: crear cliente, actualizar edad, eliminar cliente.
+    \item Visor de grafo (vis-network):
+    \begin{itemize}
+      \item Selecciona centro (categoría/producto/cliente) y valor desde listas dinámicas.
+      \item Ajusta profundidad y límite; clic en nodos muestra propiedades.
+      \item Física ajustada para separar nodos y reducir solapamiento de aristas.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Flujo de uso}
+
+\begin{frame}{Paso a paso}
   \begin{enumerate}
-    \item Copia del CSV a la carpeta \texttt{import} de Neo4J.
-    \item Ejecución de \texttt{constraints.cypher}.
-    \item Creación de nodos con \texttt{import\_nodes.cypher}.
-    \item Creación de relaciones con \texttt{import\_relationships.cypher}.
+    \item \texttt{docker compose up -d} (en \texttt{proyecto-extra/}).
+    \item Ejecutar \textbf{/seed} desde la UI o vía HTTP si es la primera vez.
+    \item Probar health y un READ (\texttt{/read/top-products} o el botón en la UI).
+    \item CRUD rápido desde la UI (crear/actualizar/eliminar cliente).
+    \item Visualizar el grafo: elegir centro/valor/profundidad y explorar nodos.
   \end{enumerate}
-  \vspace{0.5em}
-  \textbf{Herramientas:} Neo4J Browser / Desktop, Cypher, Docker Compose, GitHub.
-\end{frame}
-
-\section{CRUD y evidencias}
-
-\begin{frame}{Operaciones CRUD (5 por operación)}
-  \begin{itemize}
-    \item \textbf{CREATE}: clientes, productos, categorías, relaciones de compra.
-    \item \textbf{READ}: top productos, clientes por categoría, promedio por método de pago, etc.
-    \item \textbf{UPDATE}: actualización de edad, suscripción, ratings promedios, incrementos de compras.
-    \item \textbf{DELETE}: eliminación de clientes, relaciones de compra bajas, productos sin compras.
-  \end{itemize}
-  \begin{center}
-    \includegraphics[width=0.75\linewidth]{../docs/ConsultaMayorA50.jpg}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Evidencia de operaciones}
-  \begin{columns}
-    \column{0.48\textwidth}
-      \includegraphics[width=\linewidth]{../docs/Cliente_nuevo.jpg}
-      \vspace{0.3em}
-      \includegraphics[width=\linewidth]{../docs/ActualizarEdad.jpg}
-    \column{0.48\textwidth}
-      \includegraphics[width=\linewidth]{../docs/Cliente9999eliminado.jpg}
-  \end{columns}
-\end{frame}
-
-\section{Reproducibilidad}
-
-\begin{frame}{Ejecución con Docker}
-  \begin{footnotesize}
-  \begin{itemize}
-    \item Carpeta \texttt{neo4j-docker/} con \texttt{docker-compose.yml}.
-    \item Volúmenes: \texttt{data}, \texttt{logs}, \texttt{import}, \texttt{plugins}, \texttt{conf}.
-    \item Montaje de \texttt{neo4j/} como \texttt{/scripts} para ejecutar los .cypher directamente.
-    \item Comandos principales:
-      \begin{itemize}
-        \item \texttt{docker compose up -d}
-        \item \texttt{cat neo4j/constraints.cypher | docker compose exec -T neo4j cypher-shell -u neo4j -p test123}
-      \end{itemize}
-  \end{itemize}
-  \end{footnotesize}
 \end{frame}
 
 \section{Conclusiones}
 
 \begin{frame}{Conclusiones}
   \begin{itemize}
-    \item El modelo de grafos captura de forma clara las relaciones cliente--producto--categoría y soporta consultas analíticas.
-    \item Constraints e índices garantizan integridad y buen rendimiento en lecturas/actualizaciones.
-    \item Las evidencias muestran que las operaciones CRUD funcionan con el dataset real.
-    \item El setup Docker asegura reproducibilidad para cualquier integrante del equipo.
-    \item El dataset es una buena base para extensiones: recomendaciones, segmentación y análisis estacional.
+    \item La app web encapsula el modelo y CRUD en una interfaz sencilla.
+    \item Docker Compose garantiza reproducibilidad: API + Neo4J listos con un comando.
+    \item El visor de grafo permite explorar relaciones cliente–producto–categoría directamente en el navegador.
   \end{itemize}
 \end{frame}
 
