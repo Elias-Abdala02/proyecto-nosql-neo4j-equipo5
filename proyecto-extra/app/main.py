@@ -452,3 +452,59 @@ def health():
         return {"status": "ok"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------- GRAPH SAMPLE ----------
+@app.get("/graph/sample", summary="Subgrafo de ejemplo para visualización")
+def graph_sample(limit: int = Query(30, gt=0, le=200)):
+    query = """
+    MATCH (c:Customer)-[b:BOUGHT]->(p:Product)-[:BELONGS_TO]->(cat:Category)
+    RETURN c, b, p, cat
+    LIMIT $limit
+    """
+    with driver.session() as session:
+        result = session.run(query, {"limit": limit})
+        nodes: Dict[int, Dict[str, Any]] = {}
+        links: List[Dict[str, Any]] = []
+        seen_links = set()
+
+        def add_node(n):
+            if n.id in nodes:
+                return
+            label = list(n.labels)[0] if n.labels else "Node"
+            title = n.get("name") or n.get("customerId") or n.get("category") or label
+            nodes[n.id] = {
+                "id": str(n.id),
+                "group": label,
+                "label": title,
+                "properties": dict(n),
+            }
+
+        for record in result:
+            c = record["c"]
+            p = record["p"]
+            cat = record["cat"]
+            b = record["b"]
+            add_node(c)
+            add_node(p)
+            add_node(cat)
+            link_b = f"b-{b.id}"
+            if link_b not in seen_links:
+                links.append(
+                    {"id": link_b, "from": str(c.id), "to": str(p.id), "label": "BOUGHT"}
+                )
+                seen_links.add(link_b)
+
+            link_bel = f"bel-{p.id}-{cat.id}"
+            if link_bel not in seen_links:
+                links.append(
+                    {
+                        "id": link_bel,
+                        "from": str(p.id),
+                        "to": str(cat.id),
+                        "label": "BELONGS_TO",
+                    }
+                )
+                seen_links.add(link_bel)
+
+        return {"nodes": list(nodes.values()), "links": links}
