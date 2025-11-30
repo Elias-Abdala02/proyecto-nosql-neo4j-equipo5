@@ -460,6 +460,18 @@ proyecto-nosql-neo4j-equipo5/
 │   ├── import/
 │   ├── logs/
 │   └── plugins/
+├── proyecto-extra/
+│   ├── docker-compose.yml
+│   ├── README.md
+│   ├── app/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   ├── main.py
+│   │   └── static/
+│   │       └── index.html
+│   └── neo4j-data/   # volúmenes de Neo4J para la app web
+├── Presentacion/
+│   └── presentacion.tex   # presentación del Proyecto Extra (PDF tras compilar)
 └── README.md
 ```
 
@@ -498,5 +510,20 @@ proyecto-nosql-neo4j-equipo5/
   ```bash
   cd proyecto-extra
   docker compose up -d
-  # luego POST http://localhost:8000/seed
   ```
+- Sembrar datos: `POST http://localhost:8000/seed` (puedes hacerlo desde Swagger o curl).
+
+### Paso a paso para probar (profesor)
+
+1. Clonar y cambiar a rama `PuntosExtra` si es necesario.
+2. Entrar a `proyecto-extra/` y ejecutar `docker compose up -d`.
+3. Abrir Swagger en `http://localhost:8000/docs` y ejecutar:
+   - `POST /seed` (carga CSV y crea constraints).
+   - `GET /health` (verifica conexión).
+4. Probar un par de endpoints CRUD en Swagger (ej. `GET /read/top-products`, `PATCH /update/customer-age/{id}`).
+5. Abrir la UI: `http://localhost:8000/` y:
+   - Pulsa **seed** si no lo hiciste.
+   - Consulta **Top productos**.
+   - Crea/actualiza/elimina un cliente con los formularios.
+   - En “Visualizar subgrafo”, elige centro (categoría/producto/cliente), selecciona un valor del desplegable, ajusta profundidad y carga el grafo. Haz clic en nodos para ver propiedades.
+6. Opcional: abrir Neo4J Browser en `http://localhost:7474` (usuario `neo4j`, pass `test1234`) y correr `MATCH (n) RETURN labels(n)[0], count(n);` para validar la carga.
