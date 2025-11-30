@@ -69,6 +69,21 @@
 
   <div class="card">
     <h2>Visualizar subgrafo</h2>
+    <label>Centro</label>
+    <select id="g-center-type">
+      <option value="category">Categoría</option>
+      <option value="product">Producto</option>
+      <option value="customer">Cliente</option>
+    </select>
+    <label>Valor (nombre o ID)</label>
+    <select id="g-center-value"></select>
+    <label>Profundidad (niveles)</label>
+    <select id="g-depth">
+      <option value="1">1</option>
+      <option value="2" selected>2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
     <label>Límite de resultados</label>
     <input type="number" id="g-limit" value="30" min="5" max="200">
     <button onclick="loadGraph()">Cargar grafo</button>
@@ -84,6 +99,9 @@
     const out = document.getElementById('output');
     const nodeInfo = document.getElementById('node-info');
     const api = (path) => `http://localhost:8000${path}`;
+    const centerTypeSel = document.getElementById('g-center-type');
+    const centerValueSel = document.getElementById('g-center-value');
+    const depthSel = document.getElementById('g-depth');
 
     async function seed() {
       await call('POST', '/seed');
@@ -179,6 +197,69 @@
         return null;
       }
     }
+    async function loadGraph() {
+      const limit = document.getElementById('g-limit').value || 30;
+      const depth = document.getElementById('g-depth').value || 2;
+      const centerType = centerTypeSel.value;
+      const centerValue = encodeURIComponent(centerValueSel.value || 'Clothing');
+      const data = await callRaw('GET', `/graph/sample?limit=${limit}&depth=${depth}&centerType=${centerType}&centerValue=${centerValue}`);
+      if (!data || !data.nodes) return;
+      const container = document.getElementById('graph');
+      const options = {
+        layout: { improvedLayout: true },
+        nodes: { shape: 'dot', size: 12 },
+        edges: { arrows: 'to', smooth: { type: 'dynamic' }, width: 1.5 },
+        physics: {
+          solver: 'forceAtlas2Based',
+          forceAtlas2Based: {
+            gravitationalConstant: -80,
+            centralGravity: 0.02,
+            springLength: 240,
+            springConstant: 0.02,
+            damping: 0.25,
+            avoidOverlap: 1
+          },
+          stabilization: { iterations: 300 }
+        },
+        interaction: { hover: true }
+      };
+      const nodesDS = new vis.DataSet(data.nodes);
+      const edgesDS = new vis.DataSet(data.links);
+      const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, options);
+      network.on('click', (params) => {
+        if (params.nodes.length) {
+          const nodeId = params.nodes[0];
+          const node = nodesDS.get(nodeId);
+          nodeInfo.textContent = JSON.stringify(node, null, 2);
+        } else {
+          nodeInfo.textContent = 'Haz clic en un nodo para ver sus propiedades.';
+        }
+      });
+      out.textContent = `Subgrafo cargado (${data.nodes.length} nodos, ${data.links.length} relaciones).`;
+    }
+
+    async function populateValues() {
+      const type = centerTypeSel.value;
+      const res = await callRaw('GET', `/graph/options?type=${type}`);
+      if (!res || !res.values) return;
+      centerValueSel.innerHTML = '';
+      res.values.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        centerValueSel.appendChild(opt);
+      });
+      // ajustar profundidad sugerida (categoría y producto usualmente 2-3, cliente 2)
+      if (type === 'customer') {
+        depthSel.value = '2';
+      } else {
+        depthSel.value = '3';
+      }
+    }
+
+    // Inicializar opciones al cargar
+    centerTypeSel.addEventListener('change', populateValues);
+    window.addEventListener('load', populateValues);
   </script>
 </body>
 </html>

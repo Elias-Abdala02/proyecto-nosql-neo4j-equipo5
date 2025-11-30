@@ -454,19 +454,68 @@ def health():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------- Graph options ----------
+@app.get("/graph/options", summary="Listado de valores disponibles por tipo")
+def graph_options(
+    type: str = Query("category", pattern="^(category|product|customer)$"),
+    limit: int = Query(100, gt=1, le=300),
+):
+    if type == "category":
+        q = "MATCH (c:Category) RETURN c.name AS value ORDER BY c.name LIMIT $limit"
+    elif type == "product":
+        q = "MATCH (p:Product) RETURN DISTINCT p.name AS value ORDER BY value LIMIT $limit"
+    else:
+        q = "MATCH (c:Customer) RETURN c.customerId AS value ORDER BY value LIMIT $limit"
+    results = run_query(q, {"limit": limit})
+    return {"type": type, "values": [r["value"] for r in results]}
+
+
 # ---------- GRAPH SAMPLE ----------
-@app.get("/graph/sample", summary="Subgrafo de ejemplo para visualización")
-def graph_sample(limit: int = Query(30, gt=0, le=200)):
-    query = """
-    MATCH (c:Customer)-[b:BOUGHT]->(p:Product)-[:BELONGS_TO]->(cat:Category)
-    RETURN c, b, p, cat
+@app.get("/graph/sample", summary="Subgrafo centrado en un nodo específico")
+def graph_sample(
+    centerType: str = Query("category", pattern="^(category|product|customer)$"),
+    centerValue: str = Query("Clothing", description="Nombre o ID del nodo centro"),
+    depth: int = Query(2, gt=0, le=4),
+    limit: int = Query(50, gt=1, le=400),
+):
+    depth_clamped = max(1, min(depth, 4))
+    query = f"""
+    WITH $centerType AS type, $centerValue AS val, toInteger($centerValue) AS ival
+    CALL {{
+      WITH type, val, ival
+      OPTIONAL MATCH (c:Category {{name: val}})
+      WHERE type = 'category'
+      RETURN c AS center
+      UNION
+      WITH type, val, ival
+      OPTIONAL MATCH (p:Product {{name: val}})
+      WHERE type = 'product'
+      RETURN p AS center
+      UNION
+      WITH type, val, ival
+      OPTIONAL MATCH (cu:Customer {{customerId: ival}})
+      WHERE type = 'customer'
+      RETURN cu AS center
+    }}
+    WITH center WHERE center IS NOT NULL
+    MATCH p=(center)-[*..{depth_clamped}]-(n)
+    RETURN p
     LIMIT $limit
     """
     with driver.session() as session:
-        result = session.run(query, {"limit": limit})
+        result = session.run(
+            query,
+            {
+                "centerType": centerType,
+                "centerValue": centerValue,
+                "depth": depth,
+                "limit": limit,
+            },
+        )
         nodes: Dict[int, Dict[str, Any]] = {}
         links: List[Dict[str, Any]] = []
         seen_links = set()
+        found_path = False
 
         def add_node(n):
             if n.id in nodes:
@@ -481,30 +530,25 @@ def graph_sample(limit: int = Query(30, gt=0, le=200)):
             }
 
         for record in result:
-            c = record["c"]
-            p = record["p"]
-            cat = record["cat"]
-            b = record["b"]
-            add_node(c)
-            add_node(p)
-            add_node(cat)
-            link_b = f"b-{b.id}"
-            if link_b not in seen_links:
-                links.append(
-                    {"id": link_b, "from": str(c.id), "to": str(p.id), "label": "BOUGHT"}
-                )
-                seen_links.add(link_b)
-
-            link_bel = f"bel-{p.id}-{cat.id}"
-            if link_bel not in seen_links:
+            path = record["p"]
+            found_path = True
+            for n in path.nodes:
+                add_node(n)
+            for rel in path.relationships:
+                rid = f"{rel.type}-{rel.id}"
+                if rid in seen_links:
+                    continue
                 links.append(
                     {
-                        "id": link_bel,
-                        "from": str(p.id),
-                        "to": str(cat.id),
-                        "label": "BELONGS_TO",
+                        "id": rid,
+                        "from": str(rel.start_node.id),
+                        "to": str(rel.end_node.id),
+                        "label": rel.type,
                     }
                 )
-                seen_links.add(link_bel)
+                seen_links.add(rid)
+
+        if not found_path:
+            raise HTTPException(status_code=404, detail="Nodo centro no encontrado o sin resultados.")
 
         return {"nodes": list(nodes.values()), "links": links}
