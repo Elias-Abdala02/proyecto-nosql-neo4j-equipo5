@@ -75,8 +75,14 @@
     <div id="graph"></div>
   </div>
 
+  <div class="card">
+    <h2>Detalle de nodo</h2>
+    <pre id="node-info">Haz clic en un nodo para ver sus propiedades.</pre>
+  </div>
+
   <script>
     const out = document.getElementById('output');
+    const nodeInfo = document.getElementById('node-info');
     const api = (path) => `http://localhost:8000${path}`;
 
     async function seed() {
@@ -128,12 +134,21 @@
             avoidOverlap: 1
           },
           stabilization: { iterations: 300 }
-        }
+        },
+        interaction: { hover: true }
       };
-      const network = new vis.Network(container, {
-        nodes: new vis.DataSet(data.nodes),
-        edges: new vis.DataSet(data.links)
-      }, options);
+      const nodesDS = new vis.DataSet(data.nodes);
+      const edgesDS = new vis.DataSet(data.links);
+      const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, options);
+      network.on('click', (params) => {
+        if (params.nodes.length) {
+          const nodeId = params.nodes[0];
+          const node = nodesDS.get(nodeId);
+          nodeInfo.textContent = JSON.stringify(node, null, 2);
+        } else {
+          nodeInfo.textContent = 'Haz clic en un nodo para ver sus propiedades.';
+        }
+      });
       out.textContent = `Subgrafo cargado (${data.nodes.length} nodos, ${data.links.length} relaciones).`;
     }
 
