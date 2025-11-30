@@ -11,6 +11,8 @@ proyecto-extra/
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── main.py
+│   └── static/
+│       └── index.html   # UI en HTML/JS con vis-network
 └── neo4j-data/       # datos/logs/import/plugins/conf del contenedor Neo4J
 ```
 
@@ -38,11 +40,15 @@ Una vez levantado, ejecutar el endpoint de seed para crear constraints e importa
 POST http://localhost:8000/seed
 ```
 
-## UI mínima
+## UI (HTML/JS)
 
 - Visita `http://localhost:8000/` para usar la UI básica en HTML/JS.
 - Incluye botones para `seed`, healthcheck, top de productos y formularios simples para crear/actualizar/eliminar clientes.
 - Swagger sigue disponible en `http://localhost:8000/docs`.
+- Visualización de grafo con vis-network:
+  - Selecciona tipo de centro (categoría/producto/cliente) y valor desde listas pobladas vía `/graph/options`.
+  - Ajusta profundidad (niveles) y límite de relaciones.
+  - Al cargar, se obtiene un subgrafo desde `/graph/sample` y se dibuja. Clic en un nodo muestra sus propiedades en el panel de detalle.
 
 ## Endpoints principales (CRUD)
 
@@ -57,6 +63,11 @@ POST http://localhost:8000/seed
 
 Healthcheck: `GET /health`
 
+### Endpoints de grafo
+
+- `GET /graph/options?type=category|product|customer` — valores disponibles para el selector.
+- `GET /graph/sample?centerType=...&centerValue=...&depth=...&limit=...` — devuelve nodos y relaciones para el subgrafo centrado en el nodo indicado.
+
 ## Operaciones que realiza la aplicación
 
 - Crea y asegura clientes, categorías y productos; registra relaciones de compra.
@@ -70,6 +81,7 @@ Healthcheck: `GET /health`
 - Base de datos: Neo4J 5.15 (contenedor Docker).
 - Contenedores: Docker Compose para orquestar app + Neo4J.
 - Dataset: `data/shopping_behavior.csv` montado en `/import` y cargado con `LOAD CSV`.
+- UI: HTML/JS simple con vis-network para visualizar subgrafos interactivos.
 
 ## Notas
 
