@@ -478,77 +478,118 @@ def graph_sample(
     depth: int = Query(2, gt=0, le=4),
     limit: int = Query(50, gt=1, le=400),
 ):
-    depth_clamped = max(1, min(depth, 4))
-    query = f"""
-    WITH $centerType AS type, $centerValue AS val, toInteger($centerValue) AS ival
-    CALL {{
-      WITH type, val, ival
-      OPTIONAL MATCH (c:Category {{name: val}})
-      WHERE type = 'category'
-      RETURN c AS center
-      UNION
-      WITH type, val, ival
-      OPTIONAL MATCH (p:Product {{name: val}})
-      WHERE type = 'product'
-      RETURN p AS center
-      UNION
-      WITH type, val, ival
-      OPTIONAL MATCH (cu:Customer {{customerId: ival}})
-      WHERE type = 'customer'
-      RETURN cu AS center
-    }}
-    WITH center WHERE center IS NOT NULL
-    MATCH p=(center)-[*..{depth_clamped}]-(n)
-    RETURN p
-    LIMIT $limit
     """
+    Obtiene un subgrafo centrado en un nodo específico.
+    Muestra el grafo tal como Neo4j lo devuelve, sin filtros adicionales.
+    """
+    # Construir query según el tipo de nodo central
+    if centerType == "category":
+        center_match = "MATCH (center:Category {name: $centerValue})"
+    elif centerType == "product":
+        center_match = "MATCH (center:Product {name: $centerValue})"
+    else:  # customer
+        center_match = "MATCH (center:Customer {customerId: toInteger($centerValue)})"
+    
+    # Query simple: obtener nodos vecinos y sus relaciones
+    query = f"""
+    {center_match}
+    CALL {{
+      WITH center
+      MATCH path = (center)-[*1..{depth}]-(n)
+      WITH DISTINCT n
+      LIMIT $limit
+      RETURN n
+    }}
+    WITH center, collect(n) AS neighbors
+    WITH [center] + neighbors AS allNodes
+    UNWIND allNodes AS fromNode
+    MATCH (fromNode)-[r]-(toNode)
+    WHERE toNode IN allNodes
+    RETURN fromNode, r, toNode
+    """
+    
     with driver.session() as session:
-        result = session.run(
-            query,
-            {
-                "centerType": centerType,
-                "centerValue": centerValue,
-                "depth": depth,
-                "limit": limit,
-            },
-        )
-        nodes: Dict[int, Dict[str, Any]] = {}
-        links: List[Dict[str, Any]] = []
-        seen_links = set()
-        found_path = False
-
-        def add_node(n):
-            if n.id in nodes:
-                return
-            label = list(n.labels)[0] if n.labels else "Node"
-            title = n.get("name") or n.get("customerId") or n.get("category") or label
-            nodes[n.id] = {
-                "id": str(n.id),
-                "group": label,
-                "label": title,
-                "properties": dict(n),
-            }
-
+        result = session.run(query, {"centerValue": centerValue, "limit": limit})
+        
+        nodes = {}
+        links = {}  # Cambiar a dict para evitar duplicados
+        found_data = False
+        
         for record in result:
-            path = record["p"]
-            found_path = True
-            for n in path.nodes:
-                add_node(n)
-            for rel in path.relationships:
-                rid = f"{rel.type}-{rel.id}"
-                if rid in seen_links:
-                    continue
-                links.append(
-                    {
-                        "id": rid,
-                        "from": str(rel.start_node.id),
-                        "to": str(rel.end_node.id),
-                        "label": rel.type,
+            found_data = True
+            fromNode = record["fromNode"]
+            toNode = record["toNode"]
+            rel = record["r"]
+            
+            # Agregar nodos
+            for node in [fromNode, toNode]:
+                if node.id not in nodes:
+                    label = list(node.labels)[0] if node.labels else "Node"
+                    title = node.get("name") or str(node.get("customerId")) or label
+                    nodes[node.id] = {
+                        "id": str(node.id),
+                        "group": label,
+                        "label": title,
+                        "properties": dict(node),
                     }
-                )
-                seen_links.add(rid)
-
-        if not found_path:
+            
+            # Agregar relación evitando duplicados
+            rel_id = f"{rel.type}-{rel.id}"
+            if rel_id not in links:
+                links[rel_id] = {
+                    "id": rel_id,
+                    "from": str(fromNode.id),
+                    "to": str(toNode.id),
+                    "label": rel.type,
+                }
+        
+        if not found_data:
             raise HTTPException(status_code=404, detail="Nodo centro no encontrado o sin resultados.")
+        
+        return {"nodes": list(nodes.values()), "links": list(links.values())}
 
-        return {"nodes": list(nodes.values()), "links": links}
+
+@app.get("/graph/full", summary="Obtener el grafo completo")
+def graph_full(limit: int = Query(500, gt=1, le=10000)):
+    """
+    Obtiene todo el grafo sin filtros.
+    Útil para visualizar la estructura completa de datos.
+    """
+    query = """
+    MATCH (n)
+    WITH n
+    LIMIT $limit
+    MATCH (n)-[r]-(m)
+    RETURN n, r, m
+    """
+    
+    with driver.session() as session:
+        result = session.run(query, {"limit": limit})
+        
+        nodes = {}
+        links = {}  # Cambiar a dict para evitar duplicados
+        
+        for record in result:
+            for node in [record["n"], record["m"]]:
+                if node.id not in nodes:
+                    label = list(node.labels)[0] if node.labels else "Node"
+                    title = node.get("name") or str(node.get("customerId")) or label
+                    nodes[node.id] = {
+                        "id": str(node.id),
+                        "group": label,
+                        "label": title,
+                        "properties": dict(node),
+                    }
+            
+            rel = record["r"]
+            rel_id = f"{rel.type}-{rel.id}"
+            if rel_id not in links:
+                links[rel_id] = {
+                    "id": rel_id,
+                    "from": str(record["n"].id),
+                    "to": str(record["m"].id),
+                    "label": rel.type,
+                }
+        
+        return {"nodes": list(nodes.values()), "links": list(links.values())}
+

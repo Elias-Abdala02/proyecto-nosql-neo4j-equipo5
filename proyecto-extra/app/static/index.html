@@ -86,7 +86,8 @@
     </select>
     <label>Límite de resultados</label>
     <input type="number" id="g-limit" value="30" min="5" max="200">
-    <button onclick="loadGraph()">Cargar grafo</button>
+    <button onclick="loadGraph()">Cargar subgrafo</button>
+    <button onclick="loadFullGraph()" style="background-color: #2196F3; color: white;">Ver grafo completo</button>
     <div id="graph"></div>
   </div>
 
@@ -132,43 +133,6 @@
       const id = document.getElementById('d-id').value;
       await call('DELETE', `/delete/customer/${id}`);
     }
-    async function loadGraph() {
-      const limit = document.getElementById('g-limit').value || 30;
-      const data = await callRaw('GET', `/graph/sample?limit=${limit}`);
-      if (!data) return;
-      const container = document.getElementById('graph');
-      const options = {
-        layout: { improvedLayout: true },
-        nodes: { shape: 'dot', size: 12 },
-        edges: { arrows: 'to', smooth: { type: 'dynamic' }, width: 1.5 },
-        physics: {
-          solver: 'forceAtlas2Based',
-          forceAtlas2Based: {
-            gravitationalConstant: -80,
-            centralGravity: 0.02,
-            springLength: 240,
-            springConstant: 0.02,
-            damping: 0.25,
-            avoidOverlap: 1
-          },
-          stabilization: { iterations: 300 }
-        },
-        interaction: { hover: true }
-      };
-      const nodesDS = new vis.DataSet(data.nodes);
-      const edgesDS = new vis.DataSet(data.links);
-      const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, options);
-      network.on('click', (params) => {
-        if (params.nodes.length) {
-          const nodeId = params.nodes[0];
-          const node = nodesDS.get(nodeId);
-          nodeInfo.textContent = JSON.stringify(node, null, 2);
-        } else {
-          nodeInfo.textContent = 'Haz clic en un nodo para ver sus propiedades.';
-        }
-      });
-      out.textContent = `Subgrafo cargado (${data.nodes.length} nodos, ${data.links.length} relaciones).`;
-    }
 
     async function call(method, path, body) {
       try {
@@ -191,41 +155,185 @@
           headers: { 'Content-Type': 'application/json' },
           body: body ? JSON.stringify(body) : null
         });
+        if (!res.ok) {
+          out.textContent = `Error HTTP: ${res.status} - ${res.statusText}`;
+          return null;
+        }
         return await res.json();
       } catch (err) {
-        out.textContent = `Error: ${err}`;
+        out.textContent = `Error de red: ${err.message}`;
         return null;
       }
     }
     async function loadGraph() {
-      const limit = document.getElementById('g-limit').value || 30;
-      const depth = document.getElementById('g-depth').value || 2;
-      const centerType = centerTypeSel.value;
-      const centerValue = encodeURIComponent(centerValueSel.value || 'Clothing');
-      const data = await callRaw('GET', `/graph/sample?limit=${limit}&depth=${depth}&centerType=${centerType}&centerValue=${centerValue}`);
-      if (!data || !data.nodes) return;
+      try {
+        const limit = document.getElementById('g-limit').value || 30;
+        const depth = document.getElementById('g-depth').value || 2;
+        const centerType = centerTypeSel.value;
+        const centerValue = centerValueSel.value || 'Clothing';
+        
+        out.textContent = `Cargando subgrafo (tipo: ${centerType}, valor: ${centerValue}, profundidad: ${depth}, límite: ${limit})...`;
+        
+        const url = `/graph/sample?limit=${limit}&depth=${depth}&centerType=${centerType}&centerValue=${encodeURIComponent(centerValue)}`;
+        console.log('Llamando a:', url);
+        
+        const data = await callRaw('GET', url);
+        
+        if (!data) {
+          out.textContent = 'Error: No se recibió respuesta del servidor.';
+          return;
+        }
+        
+        if (!data.nodes) {
+          out.textContent = `Error: Respuesta inválida: ${JSON.stringify(data)}`;
+          return;
+        }
+        
+        console.log('Datos recibidos:', data.nodes.length, 'nodos,', data.links.length, 'links');
+        
+        const container = document.getElementById('graph');
+        const options = {
+          layout: { 
+            improvedLayout: true,
+            randomSeed: 42
+          },
+          nodes: { 
+            shape: 'dot', 
+            size: 16,
+            font: { size: 12 },
+            borderWidth: 2,
+            shadow: true
+          },
+          edges: { 
+            arrows: 'to', 
+            smooth: { 
+              type: 'continuous',
+              forceDirection: 'none'
+            }, 
+            width: 1,
+            color: { inherit: 'from' }
+          },
+          physics: {
+            enabled: true,
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+              gravitationalConstant: -100,
+              centralGravity: 0.015,
+              springLength: 180,
+              springConstant: 0.03,
+              damping: 0.5,
+              avoidOverlap: 0.8
+            },
+            stabilization: {
+              enabled: true,
+              iterations: 400,
+              updateInterval: 50,
+              fit: true
+            },
+            adaptiveTimestep: true
+          },
+          interaction: { 
+            hover: true,
+            navigationButtons: true,
+            keyboard: true,
+            zoomView: true,
+            dragView: true
+          }
+        };
+        
+        const nodesDS = new vis.DataSet(data.nodes);
+        const edgesDS = new vis.DataSet(data.links);
+        const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, options);
+        
+        // Detener física después de estabilizar
+        network.once('stabilizationIterationsDone', function() {
+          network.setOptions({ physics: { enabled: false } });
+          network.fit();
+        });
+        
+        network.on('click', (params) => {
+          if (params.nodes.length) {
+            const nodeId = params.nodes[0];
+            const node = nodesDS.get(nodeId);
+            nodeInfo.textContent = JSON.stringify(node, null, 2);
+          } else {
+            nodeInfo.textContent = 'Haz clic en un nodo para ver sus propiedades.';
+          }
+        });
+        
+        out.textContent = `Subgrafo cargado (${data.nodes.length} nodos, ${data.links.length} relaciones).`;
+      } catch (error) {
+        out.textContent = `Error inesperado: ${error.message}`;
+        console.error('Error en loadGraph:', error);
+      }
+    }
+
+    async function loadFullGraph() {
+      const limit = document.getElementById('g-limit').value || 500;
+      out.textContent = 'Cargando grafo completo...';
+      const data = await callRaw('GET', `/graph/full?limit=${limit}`);
+      if (!data || !data.nodes) {
+        out.textContent = 'Error al cargar el grafo completo.';
+        return;
+      }
       const container = document.getElementById('graph');
       const options = {
-        layout: { improvedLayout: true },
-        nodes: { shape: 'dot', size: 12 },
-        edges: { arrows: 'to', smooth: { type: 'dynamic' }, width: 1.5 },
+        layout: { 
+          improvedLayout: true,
+          randomSeed: 42
+        },
+        nodes: { 
+          shape: 'dot', 
+          size: 16,
+          font: { size: 12 },
+          borderWidth: 2,
+          shadow: true
+        },
+        edges: { 
+          arrows: 'to', 
+          smooth: { 
+            type: 'continuous',
+            forceDirection: 'none'
+          }, 
+          width: 1,
+          color: { inherit: 'from' }
+        },
         physics: {
+          enabled: true,
           solver: 'forceAtlas2Based',
           forceAtlas2Based: {
-            gravitationalConstant: -80,
+            gravitationalConstant: -150,
             centralGravity: 0.02,
-            springLength: 240,
+            springLength: 200,
             springConstant: 0.02,
-            damping: 0.25,
+            damping: 0.5,
             avoidOverlap: 1
           },
-          stabilization: { iterations: 300 }
+          stabilization: {
+            enabled: true,
+            iterations: 500,
+            updateInterval: 50,
+            fit: true
+          },
+          adaptiveTimestep: true
         },
-        interaction: { hover: true }
+        interaction: { 
+          hover: true,
+          navigationButtons: true,
+          keyboard: true,
+          zoomView: true,
+          dragView: true
+        }
       };
       const nodesDS = new vis.DataSet(data.nodes);
       const edgesDS = new vis.DataSet(data.links);
       const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, options);
+      
+      // Detener física después de estabilizar
+      network.once('stabilizationIterationsDone', function() {
+        network.setOptions({ physics: { enabled: false } });
+        network.fit();
+      });
       network.on('click', (params) => {
         if (params.nodes.length) {
           const nodeId = params.nodes[0];
@@ -235,7 +343,7 @@
           nodeInfo.textContent = 'Haz clic en un nodo para ver sus propiedades.';
         }
       });
-      out.textContent = `Subgrafo cargado (${data.nodes.length} nodos, ${data.links.length} relaciones).`;
+      out.textContent = `Grafo completo cargado (${data.nodes.length} nodos, ${data.links.length} relaciones).`;
     }
 
     async function populateValues() {
