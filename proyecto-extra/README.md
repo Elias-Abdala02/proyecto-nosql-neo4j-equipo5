@@ -7,6 +7,8 @@ Aplicación web simple que expone las operaciones CRUD definidas en el proyecto 
 ```
 proyecto-extra/
 ├── docker-compose.yml
+├── run.sh            # Script de ejecución para Mac/Linux
+├── run.bat           # Script de ejecución para Windows
 ├── app/
 │   ├── Dockerfile
 │   ├── requirements.txt
@@ -16,21 +18,44 @@ proyecto-extra/
 └── neo4j-data/       # datos/logs/import/plugins/conf del contenedor Neo4J
 ```
 
-## Requisitos
+## 🚀 Inicio Rápido
 
-- Docker + Docker Compose plugin.
-- El dataset `data/shopping_behavior.csv` ya está en la raíz del repositorio.
+### Prerequisitos
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) instalado y corriendo
 
-## Cómo levantar
+### Ejecución en un solo comando
+
+#### Mac/Linux:
+```bash
+cd proyecto-extra
+./run.sh
+```
+
+#### Windows:
+```cmd
+cd proyecto-extra
+run.bat
+```
+
+La aplicación se abrirá automáticamente en http://localhost:8000
+
+### Método alternativo (manual):
 
 ```bash
 cd proyecto-extra
-docker compose up -d
+docker compose up -d --build
 ```
 
 Servicios:
+Servicios:
 - Neo4J en `bolt://localhost:7687` (HTTP 7474), usuario `neo4j`, password `test1234`.
 - FastAPI en `http://localhost:8000/docs` (Swagger).
+
+### Detener la aplicación
+
+```bash
+docker compose down
+```
 
 ## Sembrar datos (seed)
 
