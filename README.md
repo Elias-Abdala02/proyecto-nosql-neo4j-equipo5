@@ -1,529 +1,149 @@
-# Proyecto NoSQL – Neo4J
-
-## Análisis de comportamiento de compra (Shopping Behaviour and Product Ranking Dataset)
-
-**Institución:** Universidad Autónoma de Yucatán  
-**Asignatura:** Modelos de Datos LCC  
-**Profesor:** M. en C. Luis R. Basto Díaz  
-**Periodo:** Agosto–Diciembre 2025
-**Equipo:** 5  
-**Integrantes:**
-
-- Abdala Aguiar Elias Abud – 22216297  
-- Nombre 2 – Matrícula  
-- jorge Enrique Hernandez Ceme - 12004204
-
-**Fecha de entrega:** 02/12/2025
-
----
-
-## 1. Descripción general del proyecto
-
-Este repositorio contiene el desarrollo del **proyecto final de Bases de Datos NoSQL** para la asignatura *Modelos de Datos LCC*.  
-El objetivo es:
-
-- Seleccionar un **dataset de Kaggle** que pueda ser modelado con una base de datos NoSQL.
-- Modelar dicho dataset en **Neo4J** (base de datos orientada a grafos).
-- Importar los datos a Neo4J.
-- Definir y documentar **sentencias CRUD (Create, Read, Update, Delete)** sobre el modelo de grafos.
-- Documentar todo el proceso en este repositorio.
-
-La base de datos NoSQL asignada al equipo es **Neo4J**.
-
----
-
-## 2. Dataset
-
-- **Nombre del dataset:** Shopping Behaviour and Product Ranking Dataset  
-- **Fuente:** Kaggle  
-- **Enlace:** <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dataset>
-- **Archivo principal:** `data/shopping_behavior.csv`  
-
-### 2.1. ¿En qué consiste?
-
-El dataset describe el **comportamiento de compra de clientes** en una tienda minorista.  
-Cada fila representa una compra realizada por un cliente e incluye:
-
-- Datos demográficos (edad, género, ubicación).
-- Información del producto comprado.
-- Monto de la compra.
-- Temporada del año.
-- Calificación del cliente.
-- Información de compras previas y método de pago.
-
-Este conjunto de datos es adecuado para Neo4J porque permite modelar una red de:
-
-- **Clientes**
-- **Productos**
-- **Categorías de producto**
-
-conectados mediante relaciones de compra.
-
----
-
-## 3. Diccionario de datos
-
-A continuación se describen las columnas del archivo `shopping_behavior.csv`:
-
-| Columna                   | Tipo (CSV) | Tipo lógico   | Descripción                                                          |
-|---------------------------|-----------:|---------------|----------------------------------------------------------------------|
-| `Customer ID`             | int        | entero        | Identificador único del cliente.                                    |
-| `Age`                     | int        | entero        | Edad del cliente.                                                   |
-| `Gender`                  | string     | cadena        | Género del cliente (por ejemplo, `Male`, `Female`).                 |
-| `Item Purchased`          | string     | cadena        | Nombre del producto comprado.                                       |
-| `Category`                | string     | cadena        | Categoría del producto (por ejemplo, `Clothing`, `Footwear`).       |
-| `Purchase Amount (USD)`   | int        | numérico      | Monto de la compra en dólares estadounidenses.                      |
-| `Location`                | string     | cadena        | Estado o lugar donde se realizó la compra.                          |
-| `Size`                    | string     | cadena        | Talla del producto (por ejemplo, `S`, `M`, `L`).                    |
-| `Color`                   | string     | cadena        | Color del producto.                                                 |
-| `Season`                  | string     | cadena        | Temporada del año (`Spring`, `Summer`, `Autumn`, `Winter`).         |
-| `Review Rating`           | float      | numérico real | Calificación otorgada por el cliente (escala aproximada 1.0–5.0).   |
-| `Subscription Status`     | string     | cadena        | Indica si el cliente está suscrito (`Yes`/`No`).                    |
-| `Discount Applied`        | string     | cadena        | Indica si se aplicó descuento (`Yes`/`No`).                         |
-| `Previous Purchases`      | int        | entero        | Número de compras previas realizadas por el cliente.                |
-| `Payment Method`          | string     | cadena        | Método de pago (`Cash`, `Credit Card`, `PayPal`, etc.).            |
-| `Frequency of Purchases`  | string     | cadena        | Frecuencia de compra (`Weekly`, `Monthly`, `Fortnightly`, etc.).    |
-
----
-
-## 4. Modelado del dataset en Neo4J (grafos)
-
-Para modelar el dataset en Neo4J se definieron los siguientes **tipos de nodos** y **relaciones**:
-
-### 4.1. Nodos
-
-1. **Cliente**  
-   Etiqueta: `:Customer`  
-   Propiedades:
-   - `customerId` (INT) – tomado de `Customer ID`
-   - `age` (INT) – `Age`
-   - `gender` (STRING) – `Gender`
-   - `location` (STRING) – `Location`
-   - `subscriptionStatus` (STRING) – `Subscription Status`
-   - `previousPurchases` (INT) – `Previous Purchases`
-   - `frequency` (STRING) – `Frequency of Purchases`
-
-2. **Producto**  
-   Etiqueta: `:Product`  
-   Propiedades:
-   - `name` (STRING) – `Item Purchased`
-   - `size` (STRING) – `Size`
-   - `color` (STRING) – `Color`
-   - `season` (STRING) – `Season`
-   - `avgReviewRating` (FLOAT, opcional) – promedio de `Review Rating`
-
-3. **Categoría**  
-   Etiqueta: `:Category`  
-   Propiedades:
-   - `name` (STRING) – `Category`
-
-### 4.2. Relaciones
-
-1. **Relación de compra**  
-   `(:Customer)-[:BOUGHT]->(:Product)`  
-   Propiedades:
-   - `amount` (FLOAT) – `Purchase Amount (USD)`
-   - `discountApplied` (STRING) – `Discount Applied`
-   - `reviewRating` (FLOAT) – `Review Rating`
-   - `paymentMethod` (STRING) – `Payment Method`
-
-2. **Relación de pertenencia**  
-   `(:Product)-[:BELONGS_TO]->(:Category)`
-
-Este modelo permite analizar:
-
-- Qué productos compra cada cliente.
-- Qué categorías son más populares.
-- Comportamiento de compra por temporada, ubicación, género, etc.
-
-### 4.3. Visualización del modelo de grafo
-
-![Modelo de grafo en Neo4J](docs/modelo_grafo.png)  
-*Visualización del esquema de nodos y relaciones implementado en Neo4J para el dataset de comportamiento de compra.*
-
-- Archivo editable del diagrama: [`docs/modelo_grafo.drawio`](docs/modelo_grafo.drawio)
-
-### 4.4. Ejemplo de subgrafo con datos reales
-
-![Subgrafo de ejemplo](docs/subgrafo_datos_reales.png)  
-*Captura de un subgrafo real tras la importación, mostrando clientes, productos y categorías conectados por compras.*
-
----
-
-## 5. Herramientas utilizadas
-
-- **Neo4J Desktop / Neo4J Browser** – Creación de la base de datos de grafos, ejecución de sentencias Cypher y visualización de nodos y relaciones.  
-- **Cypher** – Lenguaje de consulta para Neo4J (definición de nodos, relaciones y CRUD).  
-- **Git y GitHub** – Control de versiones y alojamiento del repositorio del proyecto.  
-- **Editor de texto / IDE** (por ejemplo, VS Code) – Edición de archivos `.cypher`, `.md` y scripts relacionados.  
-
----
-
-## 6. Proceso de importación de datos
-
-El proceso general para importar el dataset a Neo4J fue el siguiente:
-
-1. **Preparación del archivo CSV**
-   - Descarga del dataset desde Kaggle.
-   - Verificación de codificación (`UTF-8`) y delimitador (coma).
-   - Renombrado del archivo a `shopping_behavior.csv` y colocación en la carpeta `data/`.
-
-2. **Copia del archivo al directorio de importación de Neo4J**
-   - Se copió `shopping_behavior.csv` al directorio `import` de la instancia de Neo4J.
-
-3. **Creación de restricciones e índices**
-   - Se definieron restricciones de unicidad para `Customer.customerId` y `Category.name`.
-
-4. **Carga de nodos**
-   - Uso de sentencias `LOAD CSV WITH HEADERS` para crear nodos `Customer`, `Product` y `Category`.
-
-5. **Creación de relaciones**
-   - A partir de las mismas filas del CSV se crearon relaciones `BOUGHT` y `BELONGS_TO`.
-
-Los scripts Cypher correspondientes se encuentran en la carpeta `neo4j/`:
-
-- `constraints.cypher`
-- `import_nodes.cypher`
-- `import_relationships.cypher`
-
-Estos archivos ya están completos y listos para ejecutarse tanto desde Neo4J Browser (`:source`) como dentro del contenedor Docker (ver `neo4j-docker/README.md` para los comandos con `docker compose exec cypher-shell`).
-
----
-
-## 7. Operaciones CRUD en Neo4J
-
-En este proyecto se definieron **5 sentencias para cada operación CRUD**, totalizando 20 operaciones documentadas en el archivo `neo4j/crud.cypher`.
-
-### 7.1. CREATE (Crear) - 5 operaciones
-
-1. **C1: Crear un nuevo cliente**
-
-   ```cypher
-   CREATE (:Customer {
-       customerId: 9999,
-       age: 28,
-       gender: 'Female',
-       location: 'California',
-       subscriptionStatus: 'Yes',
-       previousPurchases: 5,
-       frequency: 'Monthly'
-   });
-   ```
-
-   *Crea un nuevo nodo de tipo Customer con todas sus propiedades.*
-
-2. **C2: Crear una nueva categoría**
-
-   ```cypher
-   CREATE (:Category {name: 'Electronics'});
-   ```
-
-   *Agrega una nueva categoría de productos al sistema.*
-
-3. **C3: Crear un nuevo producto**
-
-   ```cypher
-   CREATE (:Product {
-       name: 'Smart Watch',
-       size: 'M',
-       color: 'Black',
-       season: 'All Season',
-       avgReviewRating: 4.5
-   });
-   ```
-
-   *Inserta un nuevo producto con sus características.*
-
-4. **C4: Crear una relación de compra**
-
-   ```cypher
-   MATCH (c:Customer {customerId: 1})
-   MATCH (p:Product {name: 'Blouse'})
-   CREATE (c)-[:BOUGHT {
-       amount: 53.0,
-       discountApplied: 'Yes',
-       reviewRating: 3.1,
-       paymentMethod: 'Venmo'
-   }]->(p);
-   ```
-
-   *Establece una relación BOUGHT entre un cliente existente y un producto, incluyendo detalles de la transacción.*
-
-5. **C5: Crear producto con su categoría simultáneamente**
-
-   ```cypher
-   CREATE (p:Product {
-       name: 'Running Shoes',
-       size: 'L',
-       color: 'Blue',
-       season: 'Summer',
-       avgReviewRating: 4.2
-   })-[:BELONGS_TO]->(c:Category {name: 'Footwear'});
-   ```
-
-   *Crea un producto y lo relaciona con su categoría en una sola operación.*
-
-### 7.2. READ (Leer) - 5 operaciones
-
-1. **R1: Obtener clientes mayores de 50 años**
-
-   ```cypher
-   MATCH (c:Customer)
-   WHERE c.age > 50
-   RETURN c.customerId, c.age, c.gender, c.location
-   ORDER BY c.age DESC;
-   ```
-
-   *Consulta clientes filtrados por edad, ordenados de mayor a menor.*
-
-2. **R2: Productos más comprados (Top 10)**
-
-   ```cypher
-   MATCH (c:Customer)-[b:BOUGHT]->(p:Product)
-   RETURN p.name, COUNT(b) AS totalPurchases, AVG(b.amount) AS avgPrice
-   ORDER BY totalPurchases DESC
-   LIMIT 10;
-   ```
-
-   *Analiza los productos con mayor número de compras y su precio promedio.*
-
-3. **R3: Clientes que compraron en categoría específica**
-
-   ```cypher
-   MATCH (c:Customer)-[:BOUGHT]->(p:Product)-[:BELONGS_TO]->(cat:Category {name: 'Clothing'})
-   RETURN DISTINCT c.customerId, c.age, c.gender, c.location, COUNT(p) AS productsBought
-   ORDER BY productsBought DESC;
-   ```
-
-   *Encuentra clientes interesados en una categoría particular y cuántos productos de esa categoría compraron.*
-
-4. **R4: Promedio de compra por método de pago**
-
-   ```cypher
-   MATCH (c:Customer)-[b:BOUGHT]->(p:Product)
-   RETURN b.paymentMethod, 
-          COUNT(b) AS totalTransactions,
-          AVG(b.amount) AS avgAmount,
-          SUM(b.amount) AS totalAmount
-   ORDER BY totalAmount DESC;
-   ```
-
-   *Agrupa transacciones por método de pago con estadísticas de monto.*
-
-5. **R5: Clientes premium (suscripción activa + muchas compras)**
-
-   ```cypher
-   MATCH (c:Customer)
-   WHERE c.subscriptionStatus = 'Yes' AND c.previousPurchases > 20
-   RETURN c.customerId, c.age, c.location, c.previousPurchases, c.frequency
-   ORDER BY c.previousPurchases DESC;
-   ```
-
-   *Identifica clientes de alto valor con suscripción activa y alto historial de compras.*
-
-### 7.3. UPDATE (Actualizar) - 5 operaciones
-
-1. **U1: Actualizar edad de un cliente**
-
-   ```cypher
-   MATCH (c:Customer {customerId: 1})
-   SET c.age = 56
-   RETURN c.customerId, c.age;
-   ```
-
-   *Modifica la edad de un cliente específico.*
-
-2. **U2: Cambiar estado de suscripción por ubicación**
-
-   ```cypher
-   MATCH (c:Customer {location: 'Kentucky'})
-   SET c.subscriptionStatus = 'No'
-   RETURN c.customerId, c.location, c.subscriptionStatus;
-   ```
-
-   *Actualiza masivamente el estado de suscripción de clientes en una ubicación.*
-
-3. **U3: Recalcular rating promedio de un producto**
-
-   ```cypher
-   MATCH (p:Product {name: 'Blouse'})<-[b:BOUGHT]-()
-   WITH p, AVG(b.reviewRating) AS newAvgRating
-   SET p.avgReviewRating = newAvgRating
-   RETURN p.name, p.avgReviewRating;
-   ```
-
-   *Calcula y actualiza el promedio de calificaciones basado en todas las compras del producto.*
-
-4. **U4: Incrementar contador de compras previas**
-
-   ```cypher
-   MATCH (c:Customer {customerId: 2})
-   SET c.previousPurchases = c.previousPurchases + 1
-   RETURN c.customerId, c.previousPurchases;
-   ```
-
-   *Incrementa el contador de compras cuando un cliente realiza una nueva compra.*
-
-5. **U5: Actualizar múltiples propiedades de un producto**
-
-   ```cypher
-   MATCH (p:Product {name: 'Smart Watch'})
-   SET p.color = 'Silver',
-       p.avgReviewRating = 4.7,
-       p.season = 'Winter'
-   RETURN p;
-   ```
-
-   *Modifica varias características de un producto en una sola operación.*
-
-### 7.4. DELETE (Eliminar) - 5 operaciones
-
-1. **D1: Eliminar un cliente y todas sus relaciones**
-
-   ```cypher
-   MATCH (c:Customer {customerId: 9999})
-   DETACH DELETE c;
-   ```
-
-   *Elimina un cliente específico junto con todas sus relaciones (DETACH DELETE).*
-
-2. **D2: Eliminar compras con calificación baja**
-
-   ```cypher
-   MATCH ()-[b:BOUGHT]->()
-   WHERE b.reviewRating < 2.0
-   DELETE b;
-   ```
-
-   *Elimina relaciones de compra que tienen calificaciones muy bajas.*
-
-3. **D3: Eliminar productos nunca comprados**
-
-   ```cypher
-   MATCH (p:Product)
-   WHERE NOT (p)<-[:BOUGHT]-()
-   DELETE p;
-   ```
-
-   *Limpia productos que no tienen ninguna compra registrada.*
-
-4. **D4: Eliminar relación producto-categoría**
-
-   ```cypher
-   MATCH (p:Product {name: 'Running Shoes'})-[r:BELONGS_TO]->()
-   DELETE r;
-   ```
-
-   *Elimina la asociación entre un producto y su categoría.*
-
-5. **D5: Eliminar clientes inactivos**
-
-   ```cypher
-   MATCH (c:Customer)
-   WHERE c.subscriptionStatus = 'No' AND c.previousPurchases = 0
-   DETACH DELETE c;
-   ```
-
-   *Elimina clientes sin suscripción y sin historial de compras.*
-
----
-
-**Nota:** Todas estas sentencias están completamente documentadas en el archivo `neo4j/crud.cypher` con ejemplos adicionales y consultas útiles.
-
----
-
-## 8. Estructura del repositorio
-
-```text
-proyecto-nosql-neo4j-equipo5/
-├── data/
-│   └── shopping_behavior.csv
-├── docs/
-│   ├── diccionario_datos.md
-│   ├── modelo_grafo.drawio
-│   ├── modelo_grafo.png
-│   ├── subgrafo_datos_reales.png
-│   ├── Cliente_nuevo.jpg
-│   ├── ConsultaMayorA50.jpg
-│   ├── ActualizarEdad.jpg
-│   └── Cliente9999eliminado.jpg
-├── neo4j/
-│   ├── constraints.cypher
-│   ├── import_nodes.cypher
-│   ├── import_relationships.cypher
-│   └── crud.cypher
-├── neo4j-docker/
-│   ├── docker-compose.yml
-│   ├── README.md
-│   ├── conf/
-│   ├── data/
-│   ├── import/
-│   ├── logs/
-│   └── plugins/
-├── proyecto-extra/
-│   ├── docker-compose.yml
-│   ├── README.md
-│   ├── app/
-│   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   ├── main.py
-│   │   └── static/
-│   │       └── index.html
-│   └── neo4j-data/   # volúmenes de Neo4J para la app web
-├── Presentacion/
-│   └── presentacion.tex   # presentación del Proyecto Extra (PDF tras compilar)
-└── README.md
+# Proyecto Extra – Aplicación Web (FastAPI + Neo4J)
+
+Aplicación web simple que expone las operaciones CRUD definidas en el proyecto principal, corriendo en Docker junto a un contenedor Neo4J.
+
+## Estructura
+
+```
+proyecto-extra/
+├── docker-compose.yml
+├── run.sh            # Script de ejecución para Mac/Linux
+├── run.bat           # Script de ejecución para Windows
+├── app/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── main.py
+│   └── static/
+│       └── index.html   # UI en HTML/JS con vis-network
+└── neo4j-data/       # datos/logs/import/plugins/conf del contenedor Neo4J
 ```
 
----
+## 🚀 Inicio Rápido
 
-## 9. Conclusiones
+### Prerequisitos
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) instalado y corriendo
 
-- El modelo de grafos en Neo4J permitió integrar clientes, productos y categorías de forma natural, facilitando consultas analíticas (top productos, clientes por edad, métodos de pago).
-- El proceso de importación con `LOAD CSV` más constraints e índices asegura integridad (unicidad de clientes/productos) y buen rendimiento en las consultas CRUD.
-- Las evidencias en Neo4J Browser muestran que las operaciones CRUD funcionan y el dataset se representa correctamente en el grafo.
-- El contenedor Docker estandariza la puesta en marcha: cualquier integrante puede recrear el entorno y cargar los datos con los scripts incluidos.
-- El dataset de Kaggle resulta adecuado para grafos al capturar relaciones de compra y pertenencia; se pueden extender análisis a recomendaciones y segmentación.
+### Ejecución en un solo comando
 
----
+#### Mac/Linux:
+```bash
+cd proyecto-extra
+./run.sh
+```
 
-## 10. Referencias
+#### Windows:
+```cmd
+cd proyecto-extra
+run.bat
+```
 
-- **Kaggle – Shopping Behaviour and Product Ranking Dataset:**  
-  <https://www.kaggle.com/datasets/nalisha/shopping-behaviour-and-product-ranking-dataset>
+La aplicación se abrirá automáticamente en http://localhost:8000
 
-- **Neo4J – Documentación oficial:**  
-  <https://neo4j.com/docs/>
+### Método alternativo (manual):
 
-- **Cypher Query Language:**  
-  <https://neo4j.com/developer/cypher/>
+```bash
+cd proyecto-extra
+docker compose up -d --build
+```
 
----
+Servicios:
+Servicios:
+- Neo4J en `bolt://localhost:7687` (HTTP 7474), usuario `neo4j`, password `test1234`.
+- FastAPI en `http://localhost:8000/docs` (Swagger).
 
-## 10. Proyecto Extra (aplicación web)
+### Detener la aplicación
 
-- Carpeta: `proyecto-extra/`
-- Stack: FastAPI (Python) + Neo4J en Docker.
-- Endpoints CRUD + `/seed` y healthcheck en `http://localhost:8000/docs`.
-- UI mínima disponible en `http://localhost:8000/`.
-- Levantar con:
-  ```bash
-  cd proyecto-extra
-  docker compose up -d
-  ```
-- Sembrar datos: `POST http://localhost:8000/seed` (puedes hacerlo desde Swagger o curl).
+```bash
+docker compose down
+```
 
-### Paso a paso para probar (profesor)
+## Sembrar datos (seed)
 
-1. Clonar y cambiar a rama `PuntosExtra` si es necesario.
-2. Entrar a `proyecto-extra/` y ejecutar `docker compose up -d`.
-3. Abrir Swagger en `http://localhost:8000/docs` y ejecutar:
-   - `POST /seed` (carga CSV y crea constraints).
-   - `GET /health` (verifica conexión).
-4. Probar un par de endpoints CRUD en Swagger (ej. `GET /read/top-products`, `PATCH /update/customer-age/{id}`).
-5. Abrir la UI: `http://localhost:8000/` y:
-   - Pulsa **seed** si no lo hiciste.
-   - Consulta **Top productos**.
-   - Crea/actualiza/elimina un cliente con los formularios.
-   - En “Visualizar subgrafo”, elige centro (categoría/producto/cliente), selecciona un valor del desplegable, ajusta profundidad y carga el grafo. Haz clic en nodos para ver propiedades.
-6. Opcional: abrir Neo4J Browser en `http://localhost:7474` (usuario `neo4j`, pass `test1234`) y correr `MATCH (n) RETURN labels(n)[0], count(n);` para validar la carga.
+Una vez levantado, ejecutar el endpoint de seed para crear constraints e importar el CSV:
+
+```
+POST http://localhost:8000/seed
+```
+
+Si ya tienes datos cargados, puedes saltar este paso.
+
+## UI (HTML/JS)
+
+- Visita `http://localhost:8000/` para usar la UI básica en HTML/JS.
+- Incluye botones para `seed`, healthcheck, top de productos y formularios simples para crear/actualizar/eliminar clientes.
+- Swagger sigue disponible en `http://localhost:8000/docs`.
+- Visualización de grafo con vis-network:
+  - Selecciona tipo de centro (categoría/producto/cliente) y valor desde listas pobladas vía `/graph/options`.
+  - Ajusta profundidad (niveles) y límite de relaciones.
+  - Al cargar, se obtiene un subgrafo desde `/graph/sample` y se dibuja. Clic en un nodo muestra sus propiedades en el panel de detalle.
+
+### Guía rápida de uso (UI)
+
+1. Abre `http://localhost:8000/`.
+2. Pulsa **seed** si es la primera vez (carga datos en Neo4J).
+3. Verifica con **Healthcheck** y **Top productos**.
+4. Sección CRUD rápida:
+   - Crear cliente: completa campos y pulsa “Crear / MERGE”.
+   - Actualizar edad: ingresa ID y nueva edad.
+   - Eliminar cliente: ingresa ID y pulsa “Eliminar”.
+5. Sección grafo:
+   - Elige centro (categoría/producto/cliente); el selector de valores se rellena automáticamente.
+   - Ajusta **Profundidad** (niveles de relaciones) y **Límite** (número de relaciones a traer).
+   - Pulsa **Cargar grafo** y explora; al hacer clic en un nodo se muestran sus propiedades.
+
+### Cómo está estructurada la app web
+
+- `docker-compose.yml`: orquesta dos servicios:
+  - **neo4j** (imagen `neo4j:5.15`) con volúmenes en `neo4j-data/` y el CSV montado en `/import`.
+  - **app** (imagen construida desde `app/`) exponiendo FastAPI en 8000.
+- `app/Dockerfile` + `requirements.txt`: definen la imagen de la API (Python 3.11 + FastAPI + neo4j-driver).
+- `app/main.py`:
+  - Configura el driver de Neo4J y expone todos los endpoints.
+  - `/seed` crea constraints y carga nodos/relaciones con `LOAD CSV`.
+  - CRUD: endpoints `CREATE/READ/UPDATE/DELETE` mapean las 5 sentencias de cada operación.
+  - `/graph/options` devuelve valores disponibles para los selectores de la UI.
+  - `/graph/sample` genera un subgrafo centrado en el nodo elegido con profundidad y límite configurables.
+  - `/` sirve la UI estática.
+- `app/static/index.html`:
+  - HTML/JS simple con vis-network.
+  - Formularios para llamadas CRUD básicas.
+  - Selector de centro/valor/profundidad para el grafo; muestra propiedades al hacer clic en nodos.
+
+
+## Endpoints principales (CRUD)
+
+- CREATE:
+  - `POST /customers`, `POST /categories`, `POST /products`, `POST /purchases`, `POST /products/with-category`
+- READ:
+  - `GET /read/customers-over-50`, `GET /read/top-products`, `GET /read/customers-by-category/{category}`, `GET /read/payment-summary`, `GET /read/premium-customers`
+- UPDATE:
+  - `PATCH /update/customer-age/{customerId}`, `PATCH /update/subscription-by-location`, `POST /update/product-rating/{name}`, `POST /update/increment-previous/{customerId}`, `PATCH /update/product/{name}`
+- DELETE:
+  - `DELETE /delete/customer/{customerId}`, `DELETE /delete/purchases-low-rating`, `DELETE /delete/products-no-purchases`, `DELETE /delete/product-category/{name}`, `DELETE /delete/inactive-customers`
+
+Healthcheck: `GET /health`
+
+### Endpoints de grafo
+
+- `GET /graph/options?type=category|product|customer` — valores disponibles para el selector.
+- `GET /graph/sample?centerType=...&centerValue=...&depth=...&limit=...` — devuelve nodos y relaciones para el subgrafo centrado en el nodo indicado.
+
+## Operaciones que realiza la aplicación
+
+- Crea y asegura clientes, categorías y productos; registra relaciones de compra.
+- Consultas analíticas: clientes >50, top productos, clientes por categoría, resumen por método de pago, clientes premium.
+- Actualizaciones: edad, suscripción por ubicación, rating promedio, incremento de compras previas, propiedades de producto.
+- Eliminaciones: clientes (con relaciones), compras con rating bajo, productos sin compras, relaciones producto-categoría, clientes inactivos.
+
+## Lenguaje y herramientas utilizadas
+
+- Backend: FastAPI (Python 3.11), Uvicorn, neo4j-driver.
+- Base de datos: Neo4J 5.15 (contenedor Docker).
+- Contenedores: Docker Compose para orquestar app + Neo4J.
+- Dataset: `data/shopping_behavior.csv` montado en `/import` y cargado con `LOAD CSV`.
+- UI: HTML/JS simple con vis-network para visualizar subgrafos interactivos.
+
+## Notas
+
+- El contenedor Neo4J monta el CSV en `/import/shopping_behavior.csv`; el endpoint `/seed` usa `LOAD CSV` para crear nodos y relaciones.
+- Los scripts Cypher originales siguen en `../neo4j/` y se montan en `/scripts` por si se quieren ejecutar manualmente.
