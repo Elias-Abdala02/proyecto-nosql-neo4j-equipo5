@@ -17,8 +17,6 @@ services:
       - ./neo4j-data/import:/import
       - ./neo4j-data/plugins:/plugins
       - ./neo4j-data/conf:/conf
-      - ../neo4j:/scripts:ro
-      - ../data/shopping_behavior.csv:/import/shopping_behavior.csv:ro
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider localhost:7474 || exit 1"]
       interval: 10s
