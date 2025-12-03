@@ -1,149 +1,235 @@
-# Proyecto Extra – Aplicación Web (FastAPI + Neo4J)
+# Proyecto Extra – Aplicación Web (FastAPI + Neo4j Aura)
 
-Aplicación web simple que expone las operaciones CRUD definidas en el proyecto principal, corriendo en Docker junto a un contenedor Neo4J.
+Aplicación web desplegada en la nube que expone las operaciones CRUD definidas en el proyecto principal. Esta versión utiliza **Neo4j Aura** (base de datos en la nube) y está desplegada en **Render**.
 
-## Estructura
+## 🌐 Acceso Web
+
+**✨ Accede a la aplicación en funcionamiento:**
+
+### [https://proyecto-nosql-neo4j-equipo5.onrender.com](https://proyecto-nosql-neo4j-equipo5.onrender.com)
+
+No requiere instalación ni configuración. Los datos ya están precargados en Neo4j Aura.
+
+## 📋 Acerca de esta versión
+
+Esta rama (`proyecto-extra-web`) contiene la versión **100% en la nube** de la aplicación:
+
+- **Backend**: FastAPI desplegado en Render
+- **Base de datos**: Neo4j Aura (instancia gratuita en la nube)
+- **Datos**: Precargados con 3,900 clientes y 3,099 productos
+- **Sin Docker**: No requiere instalación local
+
+### Diferencias con la versión Docker
+
+Si buscas ejecutar la aplicación **localmente con Docker**, consulta la rama [`proyecto-extra-docker`](https://github.com/Elias-Abdala02/proyecto-nosql-neo4j-equipo5/tree/proyecto-extra-docker).
+
+| Característica | proyecto-extra-web (esta rama) | proyecto-extra-docker |
+|----------------|--------------------------------|----------------------|
+| Despliegue | ☁️ Nube (Render + Neo4j Aura) | 🐳 Local (Docker) |
+| Instalación | No requiere | Docker Desktop |
+| Base de datos | Neo4j Aura (remota) | Neo4j container (local) |
+| Datos | Precargados | Se cargan con `/seed` |
+| Acceso | https://proyecto-nosql-neo4j-equipo5.onrender.com | http://localhost:8000 |
+
+## Estructura del Proyecto
 
 ```
 proyecto-extra/
-├── docker-compose.yml
-├── run.sh            # Script de ejecución para Mac/Linux
-├── run.bat           # Script de ejecución para Windows
+├── docker-compose.aura.yml  # Configuración para despliegue en la nube
+├── .env.example             # Variables de entorno para Neo4j Aura
+├── run-aura.sh              # Script de ejecución para Mac/Linux (Aura)
+├── run-aura.bat             # Script de ejecución para Windows (Aura)
 ├── app/
 │   ├── Dockerfile
 │   ├── requirements.txt
-│   └── main.py
+│   └── main.py              # FastAPI con conexión a Neo4j Aura
 │   └── static/
-│       └── index.html   # UI en HTML/JS con vis-network
-└── neo4j-data/       # datos/logs/import/plugins/conf del contenedor Neo4J
+│       └── index.html       # UI en HTML/JS con vis-network
+└── neo4j-data/
+    └── import/
+        └── shopping_behavior.csv  # Dataset (3,900 clientes)
 ```
 
-## 🚀 Inicio Rápido
+## 🚀 Acceso a la Aplicación Web
 
-### Prerequisitos
+### Opción 1: Acceso directo (recomendado)
+
+Simplemente accede a la URL desplegada:
+
+**[https://proyecto-nosql-neo4j-equipo5.onrender.com](https://proyecto-nosql-neo4j-equipo5.onrender.com)**
+
+La aplicación ya está funcionando con:
+- ✅ Neo4j Aura configurado y conectado
+- ✅ Datos precargados (3,900 clientes, 3,099 productos)
+- ✅ API REST disponible
+- ✅ Interfaz gráfica interactiva
+
+### Opción 2: Ejecutar localmente con Neo4j Aura
+
+Si deseas ejecutar la aplicación en tu máquina pero conectándote a Neo4j Aura:
+
+#### Prerequisitos
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) instalado y corriendo
-
-### Ejecución en un solo comando
+- Credenciales de Neo4j Aura (ya configuradas en `.env.example`)
 
 #### Mac/Linux:
 ```bash
 cd proyecto-extra
-./run.sh
+./run-aura.sh
 ```
 
 #### Windows:
 ```cmd
 cd proyecto-extra
-run.bat
+run-aura.bat
 ```
 
-La aplicación se abrirá automáticamente en http://localhost:8000
+La aplicación se abrirá en http://localhost:8000
 
-### Método alternativo (manual):
+### Opción 3: Despliegue manual con variables de entorno
 
 ```bash
 cd proyecto-extra
-docker compose up -d --build
+cp .env.example .env
+docker compose -f docker-compose.aura.yml up -d --build
 ```
 
-Servicios:
-Servicios:
-- Neo4J en `bolt://localhost:7687` (HTTP 7474), usuario `neo4j`, password `test1234`.
-- FastAPI en `http://localhost:8000/docs` (Swagger).
+## 🔌 Conexión a Neo4j Aura
 
-### Detener la aplicación
+La aplicación está configurada para conectarse a Neo4j Aura usando variables de entorno:
+
+- **URI**: `neo4j+s://257b501e.databases.neo4j.io`
+- **Database**: `neo4j`
+- **Autenticación**: Credenciales almacenadas de forma segura
+
+### Variables de entorno
 
 ```bash
-docker compose down
+NEO4J_URI=neo4j+s://257b501e.databases.neo4j.io
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=<contraseña>
+NEO4J_DATABASE=neo4j
 ```
 
-## Sembrar datos (seed)
+## 💾 Datos y Seed
 
-Una vez levantado, ejecutar el endpoint de seed para crear constraints e importar el CSV:
+### ⚠️ Importante: Botón Seed Deshabilitado
 
-```
-POST http://localhost:8000/seed
-```
+En esta versión cloud, el botón **Seed** está **deshabilitado** porque:
 
-Si ya tienes datos cargados, puedes saltar este paso.
+- Los datos ya están **precargados en Neo4j Aura**
+- La carga masiva de CSV desde URLs externas está optimizada para la nube
+- No es necesario ejecutar el seed nuevamente
 
-## UI (HTML/JS)
+Si intentas usar el endpoint `/seed`, recibirás un mensaje informativo explicando que la base de datos ya contiene los datos necesarios.
 
-- Visita `http://localhost:8000/` para usar la UI básica en HTML/JS.
-- Incluye botones para `seed`, healthcheck, top de productos y formularios simples para crear/actualizar/eliminar clientes.
-- Swagger sigue disponible en `http://localhost:8000/docs`.
-- Visualización de grafo con vis-network:
-  - Selecciona tipo de centro (categoría/producto/cliente) y valor desde listas pobladas vía `/graph/options`.
-  - Ajusta profundidad (niveles) y límite de relaciones.
-  - Al cargar, se obtiene un subgrafo desde `/graph/sample` y se dibuja. Clic en un nodo muestra sus propiedades en el panel de detalle.
+### Dataset incluido
 
-### Guía rápida de uso (UI)
+- **3,900 clientes** con información demográfica y comportamiento de compra
+- **3,099 productos** únicos con categorías, temporadas y ratings
+- **Relaciones de compra** con montos, descuentos y métodos de pago
 
-1. Abre `http://localhost:8000/`.
-2. Pulsa **seed** si es la primera vez (carga datos en Neo4J).
-3. Verifica con **Healthcheck** y **Top productos**.
-4. Sección CRUD rápida:
-   - Crear cliente: completa campos y pulsa “Crear / MERGE”.
-   - Actualizar edad: ingresa ID y nueva edad.
-   - Eliminar cliente: ingresa ID y pulsa “Eliminar”.
-5. Sección grafo:
-   - Elige centro (categoría/producto/cliente); el selector de valores se rellena automáticamente.
-   - Ajusta **Profundidad** (niveles de relaciones) y **Límite** (número de relaciones a traer).
-   - Pulsa **Cargar grafo** y explora; al hacer clic en un nodo se muestran sus propiedades.
+## 🖥️ Uso de la Interfaz Web
 
-### Cómo está estructurada la app web
+### Acceso a la interfaz
 
-- `docker-compose.yml`: orquesta dos servicios:
-  - **neo4j** (imagen `neo4j:5.15`) con volúmenes en `neo4j-data/` y el CSV montado en `/import`.
-  - **app** (imagen construida desde `app/`) exponiendo FastAPI en 8000.
-- `app/Dockerfile` + `requirements.txt`: definen la imagen de la API (Python 3.11 + FastAPI + neo4j-driver).
+- **Producción**: [https://proyecto-nosql-neo4j-equipo5.onrender.com](https://proyecto-nosql-neo4j-equipo5.onrender.com)
+- **Local** (si ejecutas con run-aura.sh): `http://localhost:8000/`
+- **Documentación API**: Agrega `/docs` a cualquiera de las URLs anteriores para Swagger
+
+### Características de la UI
+
+- ✅ **Healthcheck**: Verifica conectividad con Neo4j Aura
+- ✅ **Top productos**: Productos más comprados
+- ✅ **CRUD rápido**: Crear, actualizar y eliminar clientes
+- ✅ **Visualización de grafo**: Interactúa con la red de datos usando vis-network
+
+### Guía rápida de uso
+
+1. Abre [https://proyecto-nosql-neo4j-equipo5.onrender.com](https://proyecto-nosql-neo4j-equipo5.onrender.com)
+2. Verifica con **Healthcheck** (debe mostrar status: ok)
+3. Consulta **Top productos** para ver los artículos más vendidos
+4. **CRUD rápida**:
+   - Crear cliente: completa campos y pulsa "Crear / MERGE"
+   - Actualizar edad: ingresa ID y nueva edad
+   - Eliminar cliente: ingresa ID y pulsa "Eliminar"
+5. **Visualización de grafo**:
+   - Elige centro (categoría/producto/cliente)
+   - El selector de valores se rellena automáticamente
+   - Ajusta **Profundidad** (niveles de relaciones) y **Límite** (número de nodos)
+   - Pulsa **Cargar grafo** y explora
+   - Clic en un nodo muestra sus propiedades
+
+## 🏗️ Arquitectura de la Aplicación
+
+### Componentes principales
+
+- **FastAPI**: Framework web moderno para Python
+  - Endpoints REST para operaciones CRUD
+  - Documentación automática con Swagger
+  - CORS habilitado para acceso desde navegadores
+- **Neo4j Aura**: Base de datos de grafos en la nube
+  - Conexión segura mediante `neo4j+s://` (SSL/TLS)
+  - Driver oficial de Neo4j para Python (~5.28.0)
+  - Base de datos: `neo4j`
+- **vis-network**: Biblioteca JavaScript para visualización de grafos
+  - Renderizado interactivo de nodos y relaciones
+  - Navegación y zoom en el grafo
+  - Panel de detalles de nodos
+
+### Estructura del código
+
 - `app/main.py`:
-  - Configura el driver de Neo4J y expone todos los endpoints.
-  - `/seed` crea constraints y carga nodos/relaciones con `LOAD CSV`.
-  - CRUD: endpoints `CREATE/READ/UPDATE/DELETE` mapean las 5 sentencias de cada operación.
-  - `/graph/options` devuelve valores disponibles para los selectores de la UI.
-  - `/graph/sample` genera un subgrafo centrado en el nodo elegido con profundidad y límite configurables.
-  - `/` sirve la UI estática.
+  - Configura el driver de Neo4j con autenticación por tupla `(username, password)`
+  - `/seed` deshabilitado para Aura (datos precargados)
+  - CRUD: endpoints `CREATE/READ/UPDATE/DELETE` mapean las 5 sentencias de cada operación
+  - `/graph/options` devuelve valores disponibles para los selectores de la UI
+  - `/graph/sample` genera un subgrafo centrado en el nodo elegido
+  - `/` sirve la UI estática
 - `app/static/index.html`:
-  - HTML/JS simple con vis-network.
-  - Formularios para llamadas CRUD básicas.
-  - Selector de centro/valor/profundidad para el grafo; muestra propiedades al hacer clic en nodos.
-
+  - HTML/JS con vis-network
+  - Formularios para llamadas CRUD básicas
+  - Selector de centro/valor/profundidad para el grafo
+  - Usa `window.location.origin` para compatibilidad con despliegues
 
 ## Endpoints principales (CRUD)
 
-- CREATE:
+- **CREATE**:
   - `POST /customers`, `POST /categories`, `POST /products`, `POST /purchases`, `POST /products/with-category`
-- READ:
+- **READ**:
   - `GET /read/customers-over-50`, `GET /read/top-products`, `GET /read/customers-by-category/{category}`, `GET /read/payment-summary`, `GET /read/premium-customers`
-- UPDATE:
+- **UPDATE**:
   - `PATCH /update/customer-age/{customerId}`, `PATCH /update/subscription-by-location`, `POST /update/product-rating/{name}`, `POST /update/increment-previous/{customerId}`, `PATCH /update/product/{name}`
-- DELETE:
+- **DELETE**:
   - `DELETE /delete/customer/{customerId}`, `DELETE /delete/purchases-low-rating`, `DELETE /delete/products-no-purchases`, `DELETE /delete/product-category/{name}`, `DELETE /delete/inactive-customers`
 
-Healthcheck: `GET /health`
+**Healthcheck**: `GET /health`
 
 ### Endpoints de grafo
 
-- `GET /graph/options?type=category|product|customer` — valores disponibles para el selector.
-- `GET /graph/sample?centerType=...&centerValue=...&depth=...&limit=...` — devuelve nodos y relaciones para el subgrafo centrado en el nodo indicado.
+- `GET /graph/options?type=category|product|customer` — valores disponibles para el selector
+- `GET /graph/sample?centerType=...&centerValue=...&depth=...&limit=...` — devuelve nodos y relaciones para el subgrafo
+- `GET /graph/full?limit=...` — obtiene el grafo completo
 
 ## Operaciones que realiza la aplicación
 
-- Crea y asegura clientes, categorías y productos; registra relaciones de compra.
-- Consultas analíticas: clientes >50, top productos, clientes por categoría, resumen por método de pago, clientes premium.
-- Actualizaciones: edad, suscripción por ubicación, rating promedio, incremento de compras previas, propiedades de producto.
-- Eliminaciones: clientes (con relaciones), compras con rating bajo, productos sin compras, relaciones producto-categoría, clientes inactivos.
+- Crea y asegura clientes, categorías y productos; registra relaciones de compra
+- Consultas analíticas: clientes >50, top productos, clientes por categoría, resumen por método de pago, clientes premium
+- Actualizaciones: edad, suscripción por ubicación, rating promedio, incremento de compras previas, propiedades de producto
+- Eliminaciones: clientes (con relaciones), compras con rating bajo, productos sin compras, relaciones producto-categoría, clientes inactivos
 
-## Lenguaje y herramientas utilizadas
+## 🛠️ Tecnologías utilizadas
 
-- Backend: FastAPI (Python 3.11), Uvicorn, neo4j-driver.
-- Base de datos: Neo4J 5.15 (contenedor Docker).
-- Contenedores: Docker Compose para orquestar app + Neo4J.
-- Dataset: `data/shopping_behavior.csv` montado en `/import` y cargado con `LOAD CSV`.
-- UI: HTML/JS simple con vis-network para visualizar subgrafos interactivos.
+- **Backend**: FastAPI 0.115.0, Uvicorn 0.30.6
+- **Base de datos**: Neo4j Aura (driver ~5.28.0)
+- **Deployment**: Render (web service)
+- **Dataset**: `shopping_behavior.csv` con 3,900 registros
+- **Frontend**: HTML/JS con vis-network 9.1.2
 
-## Notas
+## 📝 Notas importantes
 
-- El contenedor Neo4J monta el CSV en `/import/shopping_behavior.csv`; el endpoint `/seed` usa `LOAD CSV` para crear nodos y relaciones.
-- Los scripts Cypher originales siguen en `../neo4j/` y se montan en `/scripts` por si se quieren ejecutar manualmente.
+- Esta versión está optimizada para despliegue en la nube con Neo4j Aura
+- Los datos se cargan desde GitHub usando URLs públicas (https://)
+- El botón seed está deshabilitado intencionalmente en producción
+- La aplicación usa `window.location.origin` para funcionar tanto en local como en Render
+- CORS está configurado para permitir acceso desde cualquier origen (producción)
