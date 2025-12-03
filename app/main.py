@@ -8,9 +8,10 @@ from neo4j import GraphDatabase, basic_auth
 from pydantic import BaseModel, Field
 
 
-NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
+NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://257b501e.databases.neo4j.io")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "test1234")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "6euITjyHAIxRU3dtVQHZ5Y9kjKEUNfOMzLUsH3s9IGU")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
 
 def get_driver():
@@ -104,17 +105,19 @@ def seed_database():
         for c in constraints:
             run_query(c)
 
-        # Importar nodos
+        # Importar nodos desde GitHub raw
+        csv_url = 'https://raw.githubusercontent.com/Elias-Abdala02/proyecto-nosql-neo4j-equipo5/proyecto-extra-solo/neo4j-data/import/shopping_behavior.csv'
+        
         run_query(
-            """
-            LOAD CSV WITH HEADERS FROM 'file:///shopping_behavior.csv' AS row
-            MERGE (:Category {name: row.Category});
+            f"""
+            LOAD CSV WITH HEADERS FROM '{csv_url}' AS row
+            MERGE (:Category {{name: row.Category}});
             """
         )
         run_query(
-            """
-            LOAD CSV WITH HEADERS FROM 'file:///shopping_behavior.csv' AS row
-            MERGE (c:Customer {customerId: toInteger(row.`Customer ID`)})
+            f"""
+            LOAD CSV WITH HEADERS FROM '{csv_url}' AS row
+            MERGE (c:Customer {{customerId: toInteger(row.`Customer ID`)}})
             ON CREATE SET
                 c.age = toInteger(row.Age),
                 c.gender = row.Gender,
@@ -125,11 +128,11 @@ def seed_database():
             """
         )
         run_query(
-            """
-            LOAD CSV WITH HEADERS FROM 'file:///shopping_behavior.csv' AS row
+            f"""
+            LOAD CSV WITH HEADERS FROM '{csv_url}' AS row
             WITH row,
                  row.`Item Purchased` + '_' + row.Color + '_' + row.Size + '_' + row.Season AS productId
-            MERGE (p:Product {productId: productId})
+            MERGE (p:Product {{productId: productId}})
             ON CREATE SET
                 p.name = row.`Item Purchased`,
                 p.size = row.Size,
@@ -140,29 +143,29 @@ def seed_database():
         )
         # Importar relaciones
         run_query(
-            """
-            LOAD CSV WITH HEADERS FROM 'file:///shopping_behavior.csv' AS row
+            f"""
+            LOAD CSV WITH HEADERS FROM '{csv_url}' AS row
             WITH row,
                  row.`Item Purchased` + '_' + row.Color + '_' + row.Size + '_' + row.Season AS productId
-            MATCH (p:Product {productId: productId})
-            MATCH (cat:Category {name: row.Category})
+            MATCH (p:Product {{productId: productId}})
+            MATCH (cat:Category {{name: row.Category}})
             MERGE (p)-[:BELONGS_TO]->(cat);
             """
         )
         run_query(
-            """
-            LOAD CSV WITH HEADERS FROM 'file:///shopping_behavior.csv' AS row
+            f"""
+            LOAD CSV WITH HEADERS FROM '{csv_url}' AS row
             WITH row,
                  row.`Item Purchased` + '_' + row.Color + '_' + row.Size + '_' + row.Season AS productId
-            MATCH (c:Customer {customerId: toInteger(row.`Customer ID`)})
-            MATCH (p:Product {productId: productId})
-            MERGE (c)-[:BOUGHT {
+            MATCH (c:Customer {{customerId: toInteger(row.`Customer ID`)}})
+            MATCH (p:Product {{productId: productId}})
+            MERGE (c)-[:BOUGHT {{
                 amount: toFloat(row.`Purchase Amount (USD)`),
                 discountApplied: row.`Discount Applied`,
                 reviewRating: toFloat(row.`Review Rating`),
                 paymentMethod: row.`Payment Method`,
                 purchaseDate: datetime()
-            }]->(p);
+            }}]->(p);
             """
         )
 

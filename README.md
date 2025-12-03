@@ -1,40 +1,50 @@
-# Proyecto Extra – Aplicación Web (FastAPI + Neo4J)
+# Proyecto Extra – Aplicación Web (FastAPI + Neo4J Aura)
 
-Aplicación web simple que expone las operaciones CRUD definidas en el proyecto principal, corriendo en Docker junto a un contenedor Neo4J.
+Aplicación web simple que expone las operaciones CRUD definidas en el proyecto principal. **Esta versión usa Neo4j Aura (cloud) en lugar de un contenedor local.**
+
+## ⚠️ Versiones Disponibles
+
+Este repositorio tiene dos ramas principales:
+
+- **`proyecto-extra-solo`**: Versión 100% local con Docker (Neo4j + FastAPI)
+- **`proyecto-extra-aura`**: Versión cloud con Neo4j Aura (solo FastAPI en Docker) ← **Estás aquí**
 
 ## Estructura
 
 ```
 proyecto-extra/
-├── docker-compose.yml
-├── run.sh            # Script de ejecución para Mac/Linux
-├── run.bat           # Script de ejecución para Windows
+├── docker-compose.yml        # Configuración local (Neo4j + FastAPI)
+├── docker-compose.aura.yml   # Configuración cloud (solo FastAPI)
+├── .env.example              # Variables de entorno para Aura
+├── run.sh                    # Script local (Mac/Linux)
+├── run.bat                   # Script local (Windows)
+├── run-aura.sh              # Script cloud (Mac/Linux)
+├── run-aura.bat             # Script cloud (Windows)
 ├── app/
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── main.py
 │   └── static/
-│       └── index.html   # UI en HTML/JS con vis-network
-└── neo4j-data/       # datos/logs/import/plugins/conf del contenedor Neo4J
+│       └── index.html       # UI en HTML/JS con vis-network
+└── neo4j-data/              # Solo para versión local
 ```
 
-## 🚀 Inicio Rápido
+## 🚀 Inicio Rápido (Versión Cloud con Aura)
 
 ### Prerequisitos
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) instalado y corriendo
+- Cuenta de [Neo4j Aura](https://neo4j.com/cloud/aura/) (tier gratuito disponible)
 
 ### Ejecución en un solo comando
 
 #### Mac/Linux:
 ```bash
-cd proyecto-extra
-./run.sh
+./run-aura.sh
 ```
 
 #### Windows:
 ```cmd
-cd proyecto-extra
-run.bat
+run-aura.bat
 ```
 
 La aplicación se abrirá automáticamente en http://localhost:8000
@@ -42,28 +52,39 @@ La aplicación se abrirá automáticamente en http://localhost:8000
 ### Método alternativo (manual):
 
 ```bash
-cd proyecto-extra
-docker compose up -d --build
+docker compose -f docker-compose.aura.yml up -d --build
 ```
 
-Servicios:
-Servicios:
-- Neo4J en `bolt://localhost:7687` (HTTP 7474), usuario `neo4j`, password `test1234`.
-- FastAPI en `http://localhost:8000/docs` (Swagger).
+**Servicios:**
+- Neo4j Aura en la nube: `neo4j+s://257b501e.databases.neo4j.io`
+- FastAPI en `http://localhost:8000/docs` (Swagger)
 
 ### Detener la aplicación
 
 ```bash
-docker compose down
+docker compose -f docker-compose.aura.yml down
+```
+
+## 🔧 Configuración de Neo4j Aura
+
+Las credenciales de Aura están configuradas en `app/main.py` y pueden sobrescribirse con variables de entorno:
+
+```python
+NEO4J_URI=neo4j+s://257b501e.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=6euITjyHAIxRU3dtVQHZ5Y9kjKEUNfOMzLUsH3s9IGU
+NEO4J_DATABASE=neo4j
 ```
 
 ## Sembrar datos (seed)
 
-Una vez levantado, ejecutar el endpoint de seed para crear constraints e importar el CSV:
+Una vez levantado, ejecutar el endpoint de seed para crear constraints e importar el CSV desde GitHub:
 
 ```
 POST http://localhost:8000/seed
 ```
+
+**Nota:** El CSV se carga automáticamente desde la URL de GitHub raw, no requiere archivos locales.
 
 Si ya tienes datos cargados, puedes saltar este paso.
 
