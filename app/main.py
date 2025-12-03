@@ -9,28 +9,30 @@ from neo4j import GraphDatabase
 from pydantic import BaseModel, Field
 
 
-# Configuración de Neo4j - soporta tanto local como Aura
+# Variables de entorno para Neo4j (compatible con Aura y local)
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
-NEO4J_USER = os.getenv("NEO4J_USERNAME", os.getenv("NEO4J_USER", "neo4j"))
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", os.getenv("NEO4J_USER", "neo4j"))
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "test1234")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
 
 def get_driver():
-    """Crear driver de Neo4j con autenticación adecuada"""
-    auth = (NEO4J_USER, NEO4J_PASSWORD)
-    driver = GraphDatabase.driver(NEO4J_URI, auth=auth)
-    # Verificar conectividad al iniciar
-    try:
-        driver.verify_connectivity()
-        print(f"✅ Conectado a Neo4j: {NEO4J_URI}")
-    except Exception as e:
-        print(f"❌ Error conectando a Neo4j: {e}")
-        raise
-    return driver
+    """Crear driver de Neo4j con autenticación"""
+    return GraphDatabase.driver(
+        NEO4J_URI,
+        auth=(NEO4J_USERNAME, NEO4J_PASSWORD)
+    )
 
 
+# Inicializar driver y verificar conectividad
 driver = get_driver()
+try:
+    driver.verify_connectivity()
+    print(f"✅ Conectado a Neo4j: {NEO4J_URI}")
+except Exception as e:
+    print(f"⚠️  Error conectando a Neo4j: {e}")
+    print(f"   URI: {NEO4J_URI}")
+    print(f"   Database: {NEO4J_DATABASE}")
 
 app = FastAPI(
     title="Proyecto Extra - Neo4J CRUD",
@@ -99,7 +101,7 @@ class ProductUpdate(BaseModel):
 
 # ---------- Utilidades ----------
 def run_query(query: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-    """Ejecutar query en la base de datos configurada"""
+    """Ejecutar query en Neo4j usando la base de datos configurada"""
     with driver.session(database=NEO4J_DATABASE) as session:
         result = session.run(query, params or {})
         return [record.data() for record in result]
@@ -473,8 +475,13 @@ def delete_inactive_customers():
 @app.get("/health", summary="Healthcheck")
 def health():
     try:
+        driver.verify_connectivity()
         run_query("RETURN 1 AS ok")
-        return {"status": "ok"}
+        return {
+            "status": "ok",
+            "neo4j_uri": NEO4J_URI.replace(NEO4J_PASSWORD, "***") if NEO4J_PASSWORD in NEO4J_URI else NEO4J_URI,
+            "database": NEO4J_DATABASE
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
