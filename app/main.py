@@ -5,17 +5,29 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from neo4j import GraphDatabase, basic_auth
+from neo4j import GraphDatabase
 from pydantic import BaseModel, Field
 
 
+# Configuración de Neo4j - soporta tanto local como Aura
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
-NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_USER = os.getenv("NEO4J_USERNAME", os.getenv("NEO4J_USER", "neo4j"))
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "test1234")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
 
 def get_driver():
-    return GraphDatabase.driver(NEO4J_URI, auth=basic_auth(NEO4J_USER, NEO4J_PASSWORD))
+    """Crear driver de Neo4j con autenticación adecuada"""
+    auth = (NEO4J_USER, NEO4J_PASSWORD)
+    driver = GraphDatabase.driver(NEO4J_URI, auth=auth)
+    # Verificar conectividad al iniciar
+    try:
+        driver.verify_connectivity()
+        print(f"✅ Conectado a Neo4j: {NEO4J_URI}")
+    except Exception as e:
+        print(f"❌ Error conectando a Neo4j: {e}")
+        raise
+    return driver
 
 
 driver = get_driver()
@@ -87,7 +99,8 @@ class ProductUpdate(BaseModel):
 
 # ---------- Utilidades ----------
 def run_query(query: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-    with driver.session() as session:
+    """Ejecutar query en la base de datos configurada"""
+    with driver.session(database=NEO4J_DATABASE) as session:
         result = session.run(query, params or {})
         return [record.data() for record in result]
 
