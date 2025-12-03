@@ -110,6 +110,17 @@ def run_query(query: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[
 # ---------- Seed / carga inicial ----------
 @app.post("/seed", summary="Crear constraints e importar dataset si no existe")
 def seed_database():
+    # Verificar si estamos usando Neo4j Aura
+    if "neo4j.io" in NEO4J_URI or "aura" in NEO4J_URI.lower():
+        return {
+            "message": "⚠️ Operación no disponible",
+            "info": "Esta aplicación está conectada a Neo4j Aura (base de datos en la nube).",
+            "reason": "Los datos ya fueron previamente cargados en la instancia de Neo4j Aura.",
+            "note": "Si necesitas recargar los datos, contacta al administrador de la base de datos.",
+            "uri": NEO4J_URI.replace(NEO4J_PASSWORD, "***") if NEO4J_PASSWORD in NEO4J_URI else NEO4J_URI
+        }
+    
+    # Si es instancia local, proceder normalmente
     try:
         # Constraints
         constraints = [
