@@ -99,7 +99,8 @@
   <script>
     const out = document.getElementById('output');
     const nodeInfo = document.getElementById('node-info');
-    const api = (path) => `http://localhost:8000${path}`;
+    // Usar la URL actual en lugar de localhost hardcodeado
+    const api = (path) => `${window.location.origin}${path}`;
     const centerTypeSel = document.getElementById('g-center-type');
     const centerValueSel = document.getElementById('g-center-value');
     const depthSel = document.getElementById('g-depth');
